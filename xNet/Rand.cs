@@ -11,7 +11,7 @@ namespace xNet
     /// <remarks>Данный класс является потокобезопасным.</remarks>
     public static class Rand
     {
-        private static readonly Random _rand = new Random();
+        public static readonly Random _rand = new Random();
 
 
         #region Статические методы (открытые)
@@ -231,16 +231,13 @@ namespace xNet
 
             #endregion
 
-            int count = source.Count();
+            var enumerable = source as TSource[] ?? source.ToArray();
+            var count = enumerable.Count();
 
-            if (count == 0)
-            {
-                return default(TSource);
-            }
-
+            if (count == 0) return default(TSource);
             lock (_rand)
             {
-                return source.ElementAt(_rand.Next(count));
+                return enumerable.ElementAt(_rand.Next(count));
             }
         }
 
