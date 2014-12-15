@@ -11,7 +11,7 @@ namespace xNet
     /// <remarks>Данный класс является потокобезопасным.</remarks>
     public static class Rand
     {
-        public static readonly Random _rand = new Random();
+        private static readonly Random _rand = new Random();
 
 
         #region Статические методы (открытые)
