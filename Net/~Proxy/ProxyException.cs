@@ -7,7 +7,7 @@ namespace xNet.Net
     /// <summary>
     /// Исключение, которое выбрасывается, в случае возникновения ошибки при работе с прокси.
     /// </summary>
-    public sealed class ProxyException : NetException, ISerializable
+    public sealed class ProxyException : NetException
     {
         /// <summary>
         /// Возвращает прокси-клиент, в котором произошла ошибка.

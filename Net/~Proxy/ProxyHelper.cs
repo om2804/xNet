@@ -30,9 +30,9 @@ namespace xNet.Net
                     return (port == 0) ?
                         new Socks4ProxyClient(host) : new Socks4ProxyClient(host, port, username);
 
-                case ProxyType.Socks4a:
+                case ProxyType.Socks4A:
                     return (port == 0) ?
-                        new Socks4aProxyClient(host) : new Socks4aProxyClient(host, port, username);
+                        new Socks4AProxyClient(host) : new Socks4AProxyClient(host, port, username);
 
                 case ProxyType.Socks5:
                     return (port == 0) ?

@@ -7,7 +7,7 @@
     {
         Http,
         Socks4,
-        Socks4a,
+        Socks4A,
         Socks5,
         Chain
     }
