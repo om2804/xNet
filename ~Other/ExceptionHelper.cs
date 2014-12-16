@@ -36,12 +36,7 @@ namespace xNet
 
         internal static bool ValidateTcpPort(int port)
         {
-            if (port < 1 || port > 65535)
-            {
-                return false;
-            }
-
-            return true;
+            return port >= 1 && port <= 65535;
         }
 
         #endregion
