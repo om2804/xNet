@@ -4,7 +4,7 @@ using System.Security;
 
 namespace xNet
 {
-    [SuppressUnmanagedCodeSecurityAttribute]
+    [SuppressUnmanagedCodeSecurity]
     internal static class SafeNativeMethods
     {
         [Flags]
