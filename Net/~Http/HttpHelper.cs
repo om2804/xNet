@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security;
 using System.Text;
 using Microsoft.Win32;
@@ -83,7 +84,7 @@ namespace xNet.Net
 
         static HttpHelper()
         {
-            AcceptAllCertificationsCallback = new RemoteCertificateValidationCallback(AcceptAllCertifications);
+            AcceptAllCertificationsCallback = AcceptAllCertifications;
         }
 
 
@@ -104,17 +105,15 @@ namespace xNet.Net
 
             encoding = encoding ?? Encoding.UTF8;
 
-            byte[] bytes = encoding.GetBytes(str);
+            var bytes = encoding.GetBytes(str);
 
-            int spaceCount = 0;
-            int otherCharCount = 0;
+            var spaceCount = 0;
+            var otherCharCount = 0;
 
             #region Подсчёт символов
 
-            for (int i = 0; i < bytes.Length; i++)
+            foreach (var c in bytes.Select(t => (char)t))
             {
-                char c = (char)bytes[i];
-
                 if (c == ' ')
                 {
                     ++spaceCount;
@@ -133,16 +132,16 @@ namespace xNet.Net
                 return str;
             }
 
-            int bufferIndex = 0;
-            byte[] buffer = new byte[bytes.Length + (otherCharCount * 2)];
+            var bufferIndex = 0;
+            var buffer = new byte[bytes.Length + (otherCharCount * 2)];
 
-            for (int i = 0; i < bytes.Length; i++)
+            foreach (var i in bytes)
             {
-                char c = (char)bytes[i];
+                var c = (char)i;
 
                 if (IsUrlSafeChar(c))
                 {
-                    buffer[bufferIndex++] = bytes[i];
+                    buffer[bufferIndex++] = i;
                 }
                 else if (c == ' ')
                 {
@@ -151,8 +150,8 @@ namespace xNet.Net
                 else
                 {
                     buffer[bufferIndex++] = (byte)'%';
-                    buffer[bufferIndex++] = (byte)IntToHex((bytes[i] >> 4) & 15);
-                    buffer[bufferIndex++] = (byte)IntToHex(bytes[i] & 15);
+                    buffer[bufferIndex++] = (byte)IntToHex((i >> 4) & 15);
+                    buffer[bufferIndex++] = (byte)IntToHex(i & 15);
                 }
             }
 
@@ -179,25 +178,12 @@ namespace xNet.Net
 
             var queryBuilder = new StringBuilder();
 
-            foreach (var param in parameters)
+            foreach (var param in parameters.Where(param => !string.IsNullOrEmpty(param.Key)))
             {
-                if (string.IsNullOrEmpty(param.Key))
-                {
-                    continue;
-                }
-
                 queryBuilder.Append(param.Key);
                 queryBuilder.Append('=');
 
-                if (dontEscape)
-                {
-                    queryBuilder.Append(param.Value);
-                }
-                else
-                {
-                    queryBuilder.Append(
-                        Uri.EscapeDataString(param.Value ?? string.Empty));
-                }
+                queryBuilder.Append(dontEscape ? param.Value : Uri.EscapeDataString(param.Value ?? string.Empty));
 
                 queryBuilder.Append('&');
             }
@@ -232,25 +218,12 @@ namespace xNet.Net
 
             var queryBuilder = new StringBuilder();
 
-            foreach (var param in parameters)
+            foreach (var param in parameters.Where(param => !string.IsNullOrEmpty(param.Key)))
             {
-                if (string.IsNullOrEmpty(param.Key))
-                {
-                    continue;
-                }
-
                 queryBuilder.Append(param.Key);
                 queryBuilder.Append('=');
 
-                if (dontEscape)
-                {
-                    queryBuilder.Append(param.Value);
-                }
-                else
-                {
-                    queryBuilder.Append(
-                        UrlEncode(param.Value ?? string.Empty, encoding));
-                }
+                queryBuilder.Append(dontEscape ? param.Value : UrlEncode(param.Value ?? string.Empty, encoding));
 
                 queryBuilder.Append('&');
             }
@@ -271,20 +244,17 @@ namespace xNet.Net
         /// <returns>MIME-тип.</returns>
         public static string DetermineMediaType(string extension)
         {
-            string mediaType = "application/octet-stream";
+            var mediaType = "application/octet-stream";
 
             try
             {
                 using (var regKey = Registry.ClassesRoot.OpenSubKey(extension))
                 {
-                    if (regKey != null)
-                    {
-                        object keyValue = regKey.GetValue("Content Type");
+                    var keyValue = regKey?.GetValue("Content Type");
 
-                        if (keyValue != null)
-                        {
-                            mediaType = keyValue.ToString();
-                        }
+                    if (keyValue != null)
+                    {
+                        mediaType = keyValue.ToString();
                     }
                 }
             }
@@ -306,13 +276,13 @@ namespace xNet.Net
         /// Генерирует случайный User-Agent от браузера IE.
         /// </summary>
         /// <returns>Случайный User-Agent от браузера IE.</returns>
-        public static string IEUserAgent()
+        public static string IeUserAgent()
         {
-            string windowsVersion = RandomWindowsVersion();
+            var windowsVersion = RandomWindowsVersion();
 
             string version = null;
             string mozillaVersion = null;
-            string otherParams = null;
+            string otherParams;
 
             #region Генерация случайной версии
 
@@ -550,20 +520,11 @@ namespace xNet.Net
         private static bool AcceptAllCertifications(object sender,
             System.Security.Cryptography.X509Certificates.X509Certificate certification,
             System.Security.Cryptography.X509Certificates.X509Chain chain,
-            System.Net.Security.SslPolicyErrors sslPolicyErrors)
-        {
-            return true;
-        }
+            SslPolicyErrors sslPolicyErrors) => true;
 
         private static bool IsUrlSafeChar(char c)
         {
-            if ((((c >= 'a') && (c <= 'z')) ||
-                ((c >= 'A') && (c <= 'Z'))) ||
-                ((c >= '0') && (c <= '9')))
-            {
-                return true;
-            }
-
+            if ((((c >= 'a') && (c <= 'z')) || ((c >= 'A') && (c <= 'Z'))) || ((c >= '0') && (c <= '9'))) return true;
             switch (c)
             {
                 case '(':
@@ -573,25 +534,18 @@ namespace xNet.Net
                 case '.':
                 case '_':
                 case '!':
-                    return true;
+
+                return true;
             }
 
             return false;
         }
 
-        private static char IntToHex(int i)
-        {
-            if (i <= 9)
-            {
-                return (char)(i + 48);
-            }
-
-            return (char)((i - 10) + 65);
-        }
+        private static char IntToHex(int i) => i <= 9 ? (char) (i + 48) : (char) ((i - 10) + 65);
 
         private static string RandomWindowsVersion()
         {
-            string windowsVersion = "Windows NT ";
+            var windowsVersion = "Windows NT ";
 
             switch (Rand.Next(4))
             {
