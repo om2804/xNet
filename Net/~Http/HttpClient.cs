@@ -79,14 +79,7 @@ namespace xNet.Net
         {
             using (var request = new HttpRequest())
             {
-                if (cookies == null)
-                {
-                    request.Cookies = new CookieDictionary();
-                }
-                else
-                {
-                    request.Cookies = cookies;
-                }
+                request.Cookies = cookies ?? new CookieDictionary();
 
                 request.Proxy = proxy;
                 request.KeepAlive = false;
@@ -109,14 +102,7 @@ namespace xNet.Net
         {
             using (var request = new HttpRequest())
             {
-                if (cookies == null)
-                {
-                    request.Cookies = new CookieDictionary();
-                }
-                else
-                {
-                    request.Cookies = cookies;
-                }
+                request.Cookies = cookies ?? new CookieDictionary();
 
                 request.Proxy = proxy;
                 request.KeepAlive = false;
@@ -145,14 +131,7 @@ namespace xNet.Net
         {
             using (var request = new HttpRequest())
             {
-                if (cookies == null)
-                {
-                    request.Cookies = new CookieDictionary();
-                }
-                else
-                {
-                    request.Cookies = cookies;
-                }
+                request.Cookies = cookies ?? new CookieDictionary();
 
                 request.Proxy = proxy;
                 request.KeepAlive = false;
@@ -176,14 +155,7 @@ namespace xNet.Net
         {
             using (var request = new HttpRequest())
             {
-                if (cookies == null)
-                {
-                    request.Cookies = new CookieDictionary();
-                }
-                else
-                {
-                    request.Cookies = cookies;
-                }
+                request.Cookies = cookies ?? new CookieDictionary();
 
                 request.Proxy = proxy;
                 request.KeepAlive = false;
@@ -212,14 +184,7 @@ namespace xNet.Net
         {
             using (var request = new HttpRequest())
             {
-                if (cookies == null)
-                {
-                    request.Cookies = new CookieDictionary();
-                }
-                else
-                {
-                    request.Cookies = cookies;
-                }
+                request.Cookies = cookies ?? new CookieDictionary();
 
                 request.Proxy = proxy;
                 request.KeepAlive = false;
@@ -243,14 +208,7 @@ namespace xNet.Net
         {
             using (var request = new HttpRequest())
             {
-                if (cookies == null)
-                {
-                    request.Cookies = new CookieDictionary();
-                }
-                else
-                {
-                    request.Cookies = cookies;
-                }
+                request.Cookies = cookies ?? new CookieDictionary();
 
                 request.Proxy = proxy;
                 request.KeepAlive = false;
@@ -296,14 +254,7 @@ namespace xNet.Net
         {
             using (var request = new HttpRequest())
             {
-                if (cookies == null)
-                {
-                    request.Cookies = new CookieDictionary();
-                }
-                else
-                {
-                    request.Cookies = cookies;
-                }
+                request.Cookies = cookies ?? new CookieDictionary();
 
                 request.Proxy = proxy;
                 request.KeepAlive = false;
@@ -344,14 +295,7 @@ namespace xNet.Net
         {
             using (var request = new HttpRequest())
             {
-                if (cookies == null)
-                {
-                    request.Cookies = new CookieDictionary();
-                }
-                else
-                {
-                    request.Cookies = cookies;
-                }
+                request.Cookies = cookies ?? new CookieDictionary();
 
                 request.Proxy = proxy;
                 request.KeepAlive = false;
@@ -384,14 +328,7 @@ namespace xNet.Net
         {
             using (var request = new HttpRequest())
             {
-                if (cookies == null)
-                {
-                    request.Cookies = new CookieDictionary();
-                }
-                else
-                {
-                    request.Cookies = cookies;
-                }
+                request.Cookies = cookies ?? new CookieDictionary();
 
                 request.Proxy = proxy;
                 request.KeepAlive = false;
@@ -419,14 +356,7 @@ namespace xNet.Net
         {
             using (var request = new HttpRequest())
             {
-                if (cookies == null)
-                {
-                    request.Cookies = new CookieDictionary();
-                }
-                else
-                {
-                    request.Cookies = cookies;
-                }
+                request.Cookies = cookies ?? new CookieDictionary();
 
                 request.Proxy = proxy;
                 request.KeepAlive = false;
@@ -455,14 +385,7 @@ namespace xNet.Net
         {
             using (var request = new HttpRequest())
             {
-                if (cookies == null)
-                {
-                    request.Cookies = new CookieDictionary();
-                }
-                else
-                {
-                    request.Cookies = cookies;
-                }
+                request.Cookies = cookies ?? new CookieDictionary();
 
                 request.Proxy = proxy;
                 request.KeepAlive = false;
@@ -490,14 +413,7 @@ namespace xNet.Net
         {
             using (var request = new HttpRequest())
             {
-                if (cookies == null)
-                {
-                    request.Cookies = new CookieDictionary();
-                }
-                else
-                {
-                    request.Cookies = cookies;
-                }
+                request.Cookies = cookies ?? new CookieDictionary();
 
                 request.Proxy = proxy;
                 request.KeepAlive = false;
