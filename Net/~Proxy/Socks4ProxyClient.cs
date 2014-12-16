@@ -73,7 +73,7 @@ namespace xNet.Net
         /// <exception cref="System.FormatException">Формат порта является неправильным.</exception>
         public static Socks4ProxyClient Parse(string proxyAddress)
         {
-            return ProxyClient.Parse(ProxyType.Socks4, proxyAddress) as Socks4ProxyClient;
+            return Parse(ProxyType.Socks4, proxyAddress) as Socks4ProxyClient;
         }
 
         /// <summary>
@@ -86,16 +86,13 @@ namespace xNet.Net
         {
             ProxyClient proxy;
 
-            if (ProxyClient.TryParse(ProxyType.Socks4, proxyAddress, out proxy))
+            if (TryParse(ProxyType.Socks4, proxyAddress, out proxy))
             {
                 result = proxy as Socks4ProxyClient;
                 return true;
             }
-            else
-            {
-                result = null;
-                return false;
-            }
+            result = null;
+            return false;
         }
 
         #endregion
@@ -144,12 +141,7 @@ namespace xNet.Net
 
             #endregion
 
-            TcpClient curTcpClient = tcpClient;
-
-            if (curTcpClient == null)
-            {
-                curTcpClient = CreateConnectionToProxy();
-            }
+            var curTcpClient = tcpClient ?? CreateConnectionToProxy();
 
             try
             {
@@ -175,17 +167,17 @@ namespace xNet.Net
 
         internal protected virtual void SendCommand(NetworkStream nStream, byte command, string destinationHost, int destinationPort)
         {
-            byte[] dstPort = GetIPAddressBytes(destinationHost);
-            byte[] dstIp = GetPortBytes(destinationPort);
+            var dstPort = GetIPAddressBytes(destinationHost);
+            var dstIp = GetPortBytes(destinationPort);
 
-            byte[] userId = string.IsNullOrEmpty(_username) ?
+            var userId = string.IsNullOrEmpty(_username) ?
                 new byte[0] : Encoding.ASCII.GetBytes(_username);
 
             // +----+----+----+----+----+----+----+----+----+----+....+----+
             // | VN | CD | DSTPORT |      DSTIP        | USERID       |NULL|
             // +----+----+----+----+----+----+----+----+----+----+....+----+
             //    1    1      2              4           variable       1
-            byte[] request = new byte[9 + userId.Length];
+            var request = new byte[9 + userId.Length];
 
             request[0] = VersionNumber;
             request[1] = command;
@@ -200,11 +192,11 @@ namespace xNet.Net
             // | VN | CD | DSTPORT |      DSTIP        |
             // +----+----+----+----+----+----+----+----+
             //   1    1       2              4
-            byte[] response = new byte[8];
+            var response = new byte[8];
 
             nStream.Read(response, 0, response.Length);
 
-            byte reply = response[1];
+            var reply = response[1];
 
             // Если запрос не выполнен.
             if (reply != CommandReplyRequestGranted)
@@ -215,29 +207,27 @@ namespace xNet.Net
 
         internal protected byte[] GetIPAddressBytes(string destinationHost)
         {
-            IPAddress ipAddr = null;
+            IPAddress ipAddr;
 
-            if (!IPAddress.TryParse(destinationHost, out ipAddr))
+            if (IPAddress.TryParse(destinationHost, out ipAddr)) return ipAddr.GetAddressBytes();
+            try
             {
-                try
-                {
-                    IPAddress[] ips = Dns.GetHostAddresses(destinationHost);
+                var ips = Dns.GetHostAddresses(destinationHost);
 
-                    if (ips.Length > 0)
-                    {
-                        ipAddr = ips[0];
-                    }
-                }
-                catch (Exception ex)
+                if (ips.Length > 0)
                 {
-                    if (ex is SocketException || ex is ArgumentException)
-                    {
-                        throw new ProxyException(string.Format(
-                            Resources.ProxyException_FailedGetHostAddresses, destinationHost), this, ex);
-                    }
-
-                    throw;
+                    ipAddr = ips[0];
                 }
+            }
+            catch (Exception ex)
+            {
+                if (ex is SocketException || ex is ArgumentException)
+                {
+                    throw new ProxyException(string.Format(
+                        Resources.ProxyException_FailedGetHostAddresses, destinationHost), this, ex);
+                }
+
+                throw;
             }
 
             return ipAddr.GetAddressBytes();
@@ -245,7 +235,7 @@ namespace xNet.Net
 
         internal protected byte[] GetPortBytes(int port)
         {
-            byte[] array = new byte[2];
+            var array = new byte[2];
 
             array[0] = (byte)(port / 256);
             array[1] = (byte)(port % 256);
@@ -276,7 +266,7 @@ namespace xNet.Net
                     break;
             }
 
-            string exceptionMsg = string.Format(
+            var exceptionMsg = string.Format(
                 Resources.ProxyException_CommandError, errorMessage, ToString());
 
             throw new ProxyException(exceptionMsg, this);
