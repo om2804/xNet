@@ -41,7 +41,7 @@ namespace xNet.Threading
             #endregion
 
             _onEvent = onEvent;
-            _callbackOnEvent = new SendOrPostCallback(OnCallback);
+            _callbackOnEvent = OnCallback;
         }
 
 
@@ -52,15 +52,7 @@ namespace xNet.Threading
         /// </summary>
         /// <param name="sender">Источник события.</param>
         /// <param name="eventArgs">Аргументы события.</param>
-        public void On(object sender, TEventArgs eventArgs)
-        {
-            EventHandler<TEventArgs> handler = EventHandler;
-
-            if (handler != null)
-            {
-                handler(sender, eventArgs);
-            }
-        }
+        public void On(object sender, TEventArgs eventArgs) => EventHandler?.Invoke(sender, eventArgs);
 
         /// <summary>
         /// Асинхронно вызывает событие.
@@ -105,9 +97,6 @@ namespace xNet.Threading
         #endregion
 
 
-        private void OnCallback(object param)
-        {
-            _onEvent(param as TEventArgs);
-        }
+        private void OnCallback(object param) => _onEvent(param as TEventArgs);
     }
 }
