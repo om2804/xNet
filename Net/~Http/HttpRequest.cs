@@ -32,51 +32,21 @@ namespace xNet.Net
 
             #region Свойства (открытые)
 
-            public Action<int> BytesReadCallback { get; set; }
+            public Action<int> BytesReadCallback { private get; set; }
 
-            public Action<int> BytesWriteCallback { get; set; }
+            public Action<int> BytesWriteCallback { private get; set; }
 
             #region Переопределённые
 
-            public override bool CanRead
-            {
-                get
-                {
-                    return _baseStream.CanRead;
-                }
-            }
+            public override bool CanRead => _baseStream.CanRead;
 
-            public override bool CanSeek
-            {
-                get
-                {
-                    return _baseStream.CanSeek;
-                }
-            }
+            public override bool CanSeek => _baseStream.CanSeek;
 
-            public override bool CanTimeout
-            {
-                get
-                {
-                    return _baseStream.CanTimeout;
-                }
-            }
+            public override bool CanTimeout => _baseStream.CanTimeout;
 
-            public override bool CanWrite
-            {
-                get
-                {
-                    return _baseStream.CanWrite;
-                }
-            }
+            public override bool CanWrite => _baseStream.CanWrite;
 
-            public override long Length
-            {
-                get
-                {
-                    return _baseStream.Length;
-                }
-            }
+            public override long Length => _baseStream.Length;
 
             public override long Position
             {
@@ -309,13 +279,7 @@ namespace xNet.Net
         /// <summary>
         /// Возвращает последний ответ от HTTP-сервера, полученный данным экземпляром класса.
         /// </summary>
-        public HttpResponse Response
-        {
-            get
-            {
-                return _response;
-            }
-        }
+        public HttpResponse Response => _response;
 
         /// <summary>
         /// Возвращает или задает прокси-клиент.
@@ -520,29 +484,11 @@ namespace xNet.Net
 
         #region Свойства (внутренние)
 
-        internal TcpClient TcpClient
-        {
-            get
-            {
-                return _tcpClient;
-            }
-        }
+        internal TcpClient TcpClient => _tcpClient;
 
-        internal Stream ClientStream
-        {
-            get
-            {
-                return _clientStream;
-            }
-        }
+        internal Stream ClientStream => _clientStream;
 
-        internal NetworkStream ClientNetworkStream
-        {
-            get
-            {
-                return _clientNetworkStream;
-            }
-        }
+        internal NetworkStream ClientNetworkStream => _clientNetworkStream;
 
         #endregion
 
@@ -2311,7 +2257,7 @@ namespace xNet.Net
 
             if (proxy == null && UseIeProxy && !WinInet.InternetConnected)
             {
-                proxy = WinInet.IEProxy;
+                proxy = WinInet.IeProxy;
             }
 
             return proxy;

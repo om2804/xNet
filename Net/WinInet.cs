@@ -30,49 +30,31 @@ namespace xNet.Net
         /// <summary>
         /// Возвращает значение, указывающие, установлено ли подключение к интернету через модем.
         /// </summary>
-        public static bool InternetThroughModem
-        {
-            get
-            {
-                return EqualConnectedState(
-                    SafeNativeMethods.InternetConnectionState.INTERNET_CONNECTION_MODEM);
-            }
-        }
+        public static bool InternetThroughModem => EqualConnectedState(
+            SafeNativeMethods.InternetConnectionState.InternetConnectionModem);
 
         /// <summary>
         /// Возвращает значение, указывающие, установлено ли подключение к интернету через локальную сеть.
         /// </summary>
-        public static bool InternetThroughLan
-        {
-            get
-            {
-                return EqualConnectedState(
-                    SafeNativeMethods.InternetConnectionState.INTERNET_CONNECTION_LAN);
-            }
-        }
+        public static bool InternetThroughLan => EqualConnectedState(
+            SafeNativeMethods.InternetConnectionState.InternetConnectionLan);
 
         /// <summary>
         /// Возвращает значение, указывающие, установлено ли подключение к интернету через прокси-сервер.
         /// </summary>
-        public static bool InternetThroughProxy
-        {
-            get
-            {
-                return EqualConnectedState(
-                    SafeNativeMethods.InternetConnectionState.INTERNET_CONNECTION_PROXY);
-            }
-        }
+        public static bool InternetThroughProxy => EqualConnectedState(
+            SafeNativeMethods.InternetConnectionState.InternetConnectionProxy);
 
         /// <summary>
         /// Возвращает значение, указывающее, используется ли прокси-сервер в Internet Explorer.
         /// </summary>
-        public static bool IEProxyEnable
+        public static bool IeProxyEnable
         {
             get
             {
                 try
                 {
-                    return GetIEProxyEnable();
+                    return GetIeProxyEnable();
                 }
                 catch (IOException) { return false; }
                 catch (SecurityException) { return false; }
@@ -83,7 +65,7 @@ namespace xNet.Net
             {
                 try
                 {
-                    SetIEProxyEnable(value);
+                    SetIeProxyEnable(value);
                 }
                 catch (IOException) { }
                 catch (SecurityException) { }
@@ -96,7 +78,7 @@ namespace xNet.Net
         /// Возвращает или задаёт прокси-сервер Internet Explorer'а.
         /// </summary>
         /// <value>Если прокси-сервер Internet Explorer'а не задан или ошибочен, то будет возвращён <see langword="null"/>. Если задать <see langword="null"/>, то прокси-сервер Internet Explorer'а будет стёрт.</value>
-        public static HttpProxyClient IEProxy
+        public static HttpProxyClient IeProxy
         {
             get
             {
@@ -104,7 +86,7 @@ namespace xNet.Net
 
                 try
                 {
-                    proxy = GetIEProxy();
+                    proxy = GetIeProxy();
                 }
                 catch (IOException) { return null; }
                 catch (SecurityException) { return null; }
@@ -148,7 +130,7 @@ namespace xNet.Net
         /// <exception cref="System.ObjectDisposedException">Объект <see cref="Microsoft.Win32.RegistryKey"/>, для которого вызывается этот метод, закрыт (доступ к закрытым разделам невозможен).</exception>
         /// <exception cref="System.UnauthorizedAccessException">У пользователя отсутствуют необходимые права доступа к реестру.</exception>
         /// <exception cref="System.IO.IOException">Раздел <see cref="Microsoft.Win32.RegistryKey"/>, содержащий заданное значение, был помечен для удаления.</exception>
-        public static bool GetIEProxyEnable()
+        public static bool GetIeProxyEnable()
         {
             using (RegistryKey regKey = Registry.CurrentUser.OpenSubKey(PathToInternetOptions))
             {
@@ -172,7 +154,7 @@ namespace xNet.Net
         /// <exception cref="System.Security.SecurityException">У пользователя отсутствуют разрешения, необходимые для создания или открытия раздела реестра.</exception>
         /// <exception cref="System.ObjectDisposedException">Объект <see cref="Microsoft.Win32.RegistryKey"/>, для которого вызывается этот метод, закрыт (доступ к закрытым разделам невозможен).</exception>
         /// <exception cref="System.UnauthorizedAccessException">Запись в объект <see cref="Microsoft.Win32.RegistryKey"/> невозможна, например, он не может быть открыт как раздел, доступный для записи, или у пользователя нет необходимых прав доступа.</exception>
-        public static void SetIEProxyEnable(bool enabled)
+        public static void SetIeProxyEnable(bool enabled)
         {
             using (RegistryKey regKey = Registry.CurrentUser.CreateSubKey(PathToInternetOptions))
             {
@@ -188,7 +170,7 @@ namespace xNet.Net
         /// <exception cref="System.ObjectDisposedException">Объект <see cref="Microsoft.Win32.RegistryKey"/>, для которого вызывается этот метод, закрыт (доступ к закрытым разделам невозможен).</exception>
         /// <exception cref="System.UnauthorizedAccessException">У пользователя отсутствуют необходимые права доступа к реестру.</exception>
         /// <exception cref="System.IO.IOException">Раздел <see cref="Microsoft.Win32.RegistryKey"/>, содержащий заданное значение, был помечен для удаления.</exception>
-        public static string GetIEProxy()
+        public static string GetIeProxy()
         {
             using (RegistryKey regKey = Registry.CurrentUser.OpenSubKey(PathToInternetOptions))
             {
