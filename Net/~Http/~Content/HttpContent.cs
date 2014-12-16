@@ -8,7 +8,7 @@ namespace xNet.Net
     public abstract class HttpContent
     {
         /// <summary>MIME-тип контента.</summary>
-        private string _contentType = string.Empty;
+        protected string _contentType = string.Empty;
 
 
         /// <summary>
