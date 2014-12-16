@@ -25,7 +25,7 @@ namespace xNet.Net
 
             #endregion
 
-            string queryString = HttpHelper.ToPostQueryString(content, dontEscape, encoding);
+            var queryString = HttpHelper.ToPostQueryString(content, dontEscape, encoding);
 
             _content = Encoding.ASCII.GetBytes(queryString);
             _offset = 0;
