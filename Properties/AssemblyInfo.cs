@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Resources;
 
@@ -7,7 +6,6 @@ using System.Resources;
 // набора атрибутов. Измените значения этих атрибутов, чтобы изменить сведения,
 // связанные со сборкой.
 [assembly: AssemblyTitle("xNet")]
-[assembly: AssemblyDescription("http://habrahabr.ru/post/146475/")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("X-rus")]
 [assembly: AssemblyProduct("xNet")]
@@ -35,4 +33,4 @@ using System.Resources;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("3.1.4.0")]
 [assembly: AssemblyFileVersion("3.1.4.0")]
-[assembly: NeutralResourcesLanguageAttribute("ru")]
+[assembly: NeutralResourcesLanguage("ru")]
