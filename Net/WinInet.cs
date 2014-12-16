@@ -102,7 +102,7 @@ namespace xNet.Net
             {
                 try
                 {
-                    SetIEProxy(value?.ToString() ?? string.Empty);
+                    SetIeProxy(value?.ToString() ?? string.Empty);
                 }
                 catch (SecurityException) { }
                 catch (ObjectDisposedException) { }
@@ -179,7 +179,7 @@ namespace xNet.Net
         /// <exception cref="System.Security.SecurityException">У пользователя отсутствуют разрешения, необходимые для создания или открытия раздела реестра.</exception>
         /// <exception cref="System.ObjectDisposedException">Объект <see cref="Microsoft.Win32.RegistryKey"/>, для которого вызывается этот метод, закрыт (доступ к закрытым разделам невозможен).</exception>
         /// <exception cref="System.UnauthorizedAccessException">Запись в объект <see cref="Microsoft.Win32.RegistryKey"/> невозможна, например, он не может быть открыт как раздел, доступный для записи, или у пользователя нет необходимых прав доступа.</exception>
-        public static void SetIEProxy(string host, int port)
+        public static void SetIeProxy(string host, int port)
         {
             #region Проверка параметров
 
@@ -200,7 +200,7 @@ namespace xNet.Net
 
             #endregion
 
-            SetIEProxy(host + ":" + port.ToString());
+            SetIeProxy(host + ":" + port.ToString());
         }
 
         /// <summary>
@@ -210,7 +210,7 @@ namespace xNet.Net
         /// <exception cref="System.Security.SecurityException">У пользователя отсутствуют разрешения, необходимые для создания или открытия раздела реестра.</exception>
         /// <exception cref="System.ObjectDisposedException">Объект <see cref="Microsoft.Win32.RegistryKey"/>, для которого вызывается этот метод, закрыт (доступ к закрытым разделам невозможен).</exception>
         /// <exception cref="System.UnauthorizedAccessException">Запись в объект <see cref="Microsoft.Win32.RegistryKey"/> невозможна, например, он не может быть открыт как раздел, доступный для записи, или у пользователя нет необходимых прав доступа.</exception>
-        public static void SetIEProxy(string hostAndPort)
+        public static void SetIeProxy(string hostAndPort)
         {
             using (var regKey = Registry.CurrentUser.CreateSubKey(PathToInternetOptions))
             {

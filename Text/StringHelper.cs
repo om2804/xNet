@@ -25,7 +25,7 @@ namespace xNet.Text
 
             var strBuilder = new StringBuilder();
 
-            for (int i = str.Length - 1; i >= 0; --i)
+            for (var i = str.Length - 1; i >= 0; --i)
             {
                 strBuilder.Append(str[i]);
             }
@@ -82,7 +82,7 @@ namespace xNet.Text
             #endregion
 
             // Ищем начало позиции левой подстроки.
-            int leftPosBegin = str.IndexOf(left, startIndex, comparsion);
+            var leftPosBegin = str.IndexOf(left, startIndex, comparsion);
 
             if (leftPosBegin == -1)
             {
@@ -90,10 +90,10 @@ namespace xNet.Text
             }
 
             // Вычисляем конец позиции левой подстроки.
-            int leftPosEnd = leftPosBegin + left.Length;
+            var leftPosEnd = leftPosBegin + left.Length;
 
             // Вычисляем длину найденной подстроки.
-            int length = str.Length - leftPosEnd;
+            var length = str.Length - leftPosEnd;
 
             return str.Substring(leftPosEnd, length);
         }
@@ -173,7 +173,7 @@ namespace xNet.Text
             #endregion
 
             // Ищем начало позиции левой подстроки.
-            int leftPosBegin = str.IndexOf(left, startIndex, comparsion);
+            var leftPosBegin = str.IndexOf(left, startIndex, comparsion);
 
             if (leftPosBegin == -1)
             {
@@ -181,10 +181,10 @@ namespace xNet.Text
             }
 
             // Вычисляем конец позиции левой подстроки.
-            int leftPosEnd = leftPosBegin + left.Length;
+            var leftPosEnd = leftPosBegin + left.Length;
 
             // Ищем начало позиции правой подстроки.
-            int rightPos = str.IndexOf(right, leftPosEnd, comparsion);
+            var rightPos = str.IndexOf(right, leftPosEnd, comparsion);
 
             if (rightPos == -1)
             {
@@ -192,7 +192,7 @@ namespace xNet.Text
             }
 
             // Вычисляем длину найденной подстроки.
-            int length = rightPos - leftPosEnd;
+            var length = rightPos - leftPosEnd;
 
             return str.Substring(leftPosEnd, length);
         }
@@ -208,10 +208,7 @@ namespace xNet.Text
         /// <exception cref="System.ArgumentNullException">Значение параметра <paramref name="left"/> или <paramref name="right"/> равно <see langword="null"/>.</exception>
         /// <exception cref="System.ArgumentException">Значение параметра <paramref name="left"/> или <paramref name="right"/> является пустой строкой.</exception>
         public static string Substring(this string str, string left, string right,
-            StringComparison comparsion = StringComparison.Ordinal)
-        {
-            return str.Substring(left, right, 0, comparsion);
-        }
+            StringComparison comparsion = StringComparison.Ordinal) => str.Substring(left, right, 0, comparsion);
 
         /// <summary>
         /// Извлекает последнею подстроку из строки. Подстрока начинается с конца позиции подстроки <paramref name="left"/> и до конца строки. Поиск начинается с заданной позиции.
@@ -262,7 +259,7 @@ namespace xNet.Text
             #endregion
 
             // Ищем начало позиции левой подстроки.
-            int leftPosBegin = str.LastIndexOf(left, startIndex, comparsion);
+            var leftPosBegin = str.LastIndexOf(left, startIndex, comparsion);
 
             if (leftPosBegin == -1)
             {
@@ -270,10 +267,10 @@ namespace xNet.Text
             }
 
             // Вычисляем конец позиции левой подстроки.
-            int leftPosEnd = leftPosBegin + left.Length;
+            var leftPosEnd = leftPosBegin + left.Length;
 
             // Вычисляем длину найденной подстроки.
-            int length = str.Length - leftPosEnd;
+            var length = str.Length - leftPosEnd;
 
             return str.Substring(leftPosEnd, length);
         }
@@ -288,15 +285,7 @@ namespace xNet.Text
         /// <exception cref="System.ArgumentNullException">Значение параметра <paramref name="left"/> равно <see langword="null"/>.</exception>
         /// <exception cref="System.ArgumentException">Значение параметра <paramref name="left"/> является пустой строкой.</exception>
         public static string LastSubstring(this string str,
-            string left, StringComparison comparsion = StringComparison.Ordinal)
-        {
-            if (string.IsNullOrEmpty(str))
-            {
-                return string.Empty;
-            }
-
-            return LastSubstring(str, left, str.Length - 1, comparsion);
-        }
+            string left, StringComparison comparsion = StringComparison.Ordinal) => string.IsNullOrEmpty(str) ? string.Empty : LastSubstring(str, left, str.Length - 1, comparsion);
 
         /// <summary>
         /// Извлекает последнею подстроку из строки. Подстрока ищется между двумя заданными строками, начиная с заданной позиции.
@@ -314,79 +303,75 @@ namespace xNet.Text
         /// -или-
         /// Значение параметра <paramref name="startIndex"/> равно или больше длины строки <paramref name="str"/>.
         /// </exception>
-        public static string LastSubstring(this string str, string left, string right,
-            int startIndex, StringComparison comparsion = StringComparison.Ordinal)
+        public static string LastSubstring(this string str, string left, string right, int startIndex, StringComparison comparsion = StringComparison.Ordinal)
         {
-            if (string.IsNullOrEmpty(str))
+            while (true)
             {
-                return string.Empty;
-            }
-
-            #region Проверка параметров
-
-            if (left == null)
-            {
-                throw new ArgumentNullException("left");
-            }
-
-            if (left.Length == 0)
-            {
-                throw ExceptionHelper.EmptyString("left");
-            }
-
-            if (right == null)
-            {
-                throw new ArgumentNullException("right");
-            }
-
-            if (right.Length == 0)
-            {
-                throw ExceptionHelper.EmptyString("right");
-            }
-
-            if (startIndex < 0)
-            {
-                throw ExceptionHelper.CanNotBeLess("startIndex", 0);
-            }
-
-            if (startIndex >= str.Length)
-            {
-                throw new ArgumentOutOfRangeException("startIndex",
-                    Resources.ArgumentOutOfRangeException_StringHelper_MoreLengthString);
-            }
-
-            #endregion
-
-            // Ищем начало позиции левой подстроки.
-            int leftPosBegin = str.LastIndexOf(left, startIndex, comparsion);
-
-            if (leftPosBegin == -1)
-            {
-                return string.Empty;
-            }
-
-            // Вычисляем конец позиции левой подстроки.
-            int leftPosEnd = leftPosBegin + left.Length;
-
-            // Ищем начало позиции правой подстроки.
-            int rightPos = str.IndexOf(right, leftPosEnd, comparsion);
-
-            if (rightPos == -1)
-            {
-                if (leftPosBegin == 0)
+                if (string.IsNullOrEmpty(str))
                 {
                     return string.Empty;
                 }
-                else
+
+                #region Проверка параметров
+
+                if (left == null)
                 {
-                    return LastSubstring(str, left, right, leftPosBegin - 1, comparsion);
+                    throw new ArgumentNullException("left");
                 }
+
+                if (left.Length == 0)
+                {
+                    throw ExceptionHelper.EmptyString("left");
+                }
+
+                if (right == null)
+                {
+                    throw new ArgumentNullException("right");
+                }
+
+                if (right.Length == 0)
+                {
+                    throw ExceptionHelper.EmptyString("right");
+                }
+
+                if (startIndex < 0)
+                {
+                    throw ExceptionHelper.CanNotBeLess("startIndex", 0);
+                }
+
+                if (startIndex >= str.Length)
+                {
+                    throw new ArgumentOutOfRangeException("startIndex", Resources.ArgumentOutOfRangeException_StringHelper_MoreLengthString);
+                }
+
+                #endregion
+
+                // Ищем начало позиции левой подстроки.
+                var leftPosBegin = str.LastIndexOf(left, startIndex, comparsion);
+
+                if (leftPosBegin == -1)
+                {
+                    return string.Empty;
+                }
+
+                // Вычисляем конец позиции левой подстроки.
+                var leftPosEnd = leftPosBegin + left.Length;
+
+                // Ищем начало позиции правой подстроки.
+                var rightPos = str.IndexOf(right, leftPosEnd, comparsion);
+
+                if (rightPos == -1)
+                {
+                    if (leftPosBegin == 0) return string.Empty;
+                    startIndex = leftPosBegin - 1;
+                    continue;
+                }
+
+                // Вычисляем длину найденной подстроки.
+                var length = rightPos - leftPosEnd;
+
+                return str.Substring(leftPosEnd, length);
             }
-
-            // Вычисляем длину найденной подстроки.
-            int length = rightPos - leftPosEnd;
-
-            return str.Substring(leftPosEnd, length);
         }
 
         /// <summary>
@@ -400,15 +385,7 @@ namespace xNet.Text
         /// <exception cref="System.ArgumentNullException">Значение параметра <paramref name="left"/> или <paramref name="right"/> равно <see langword="null"/>.</exception>
         /// <exception cref="System.ArgumentException">Значение параметра <paramref name="left"/> или <paramref name="right"/> является пустой строкой.</exception>
         public static string LastSubstring(this string str, string left, string right,
-            StringComparison comparsion = StringComparison.Ordinal)
-        {
-            if (string.IsNullOrEmpty(str))
-            {
-                return string.Empty;
-            }
-
-            return str.LastSubstring(left, right, str.Length - 1, comparsion);
-        }
+            StringComparison comparsion = StringComparison.Ordinal) => string.IsNullOrEmpty(str) ? string.Empty : str.LastSubstring(left, right, str.Length - 1, comparsion);
 
         /// <summary>
         /// Извлекает подстроки из строки. Подстрока ищется между двумя заданными строками, начиная с заданной позиции.
@@ -469,13 +446,13 @@ namespace xNet.Text
 
             #endregion
 
-            int currentStartIndex = startIndex;
-            List<string> strings = new List<string>();
+            var currentStartIndex = startIndex;
+            var strings = new List<string>();
 
             while (true)
             {
                 // Ищем начало позиции левой подстроки.
-                int leftPosBegin = str.IndexOf(left, currentStartIndex, comparsion);
+                var leftPosBegin = str.IndexOf(left, currentStartIndex, comparsion);
 
                 if (leftPosBegin == -1)
                 {
@@ -483,10 +460,10 @@ namespace xNet.Text
                 }
 
                 // Вычисляем конец позиции левой подстроки.
-                int leftPosEnd = leftPosBegin + left.Length;
+                var leftPosEnd = leftPosBegin + left.Length;
 
                 // Ищем начало позиции правой строки.
-                int rightPos = str.IndexOf(right, leftPosEnd, comparsion);
+                var rightPos = str.IndexOf(right, leftPosEnd, comparsion);
 
                 if (rightPos == -1)
                 {
@@ -494,7 +471,7 @@ namespace xNet.Text
                 }
 
                 // Вычисляем длину найденной подстроки.
-                int length = rightPos - leftPosEnd;
+                var length = rightPos - leftPosEnd;
 
                 strings.Add(str.Substring(leftPosEnd, length));
 
@@ -516,10 +493,7 @@ namespace xNet.Text
         /// <exception cref="System.ArgumentNullException">Значение параметра <paramref name="left"/> или <paramref name="right"/> равно <see langword="null"/>.</exception>
         /// <exception cref="System.ArgumentException">Значение параметра <paramref name="left"/> или <paramref name="right"/> является пустой строкой.</exception>
         public static string[] Substrings(this string str, string left, string right,
-            StringComparison comparsion = StringComparison.Ordinal)
-        {
-            return str.Substrings(left, right, 0, comparsion);
-        }
+            StringComparison comparsion = StringComparison.Ordinal) => str.Substrings(left, right, 0, comparsion);
 
         #endregion
     }
