@@ -152,7 +152,7 @@ namespace xNet.Net
 
             if (destinationPort != 80)
             {
-                HttpStatusCode statusCode = HttpStatusCode.OK;
+                HttpStatusCode statusCode = HttpStatusCode.Ok;
 
                 try
                 {
@@ -173,7 +173,7 @@ namespace xNet.Net
                     throw;
                 }
 
-                if (statusCode != HttpStatusCode.OK)
+                if (statusCode != HttpStatusCode.Ok)
                 {
                     curTcpClient.Close();
 

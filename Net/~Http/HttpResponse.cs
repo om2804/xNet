@@ -368,7 +368,7 @@ namespace xNet.Net
         /// <summary>
         /// Возвращает значение, указывающие, успешно ли выполнен запрос (код ответа = 200 OK). 
         /// </summary>
-        public bool IsOk => (StatusCode == HttpStatusCode.OK);
+        public bool IsOk => (StatusCode == HttpStatusCode.Ok);
 
         /// <summary>
         /// Возвращает значение, указывающие, имеется ли переадресация.
