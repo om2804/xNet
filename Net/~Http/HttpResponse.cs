@@ -4,7 +4,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Text;
 using System.Threading;
-using xNet.Collections;
 using xNet.Text;
 
 namespace xNet.Net
@@ -745,7 +744,7 @@ namespace xNet.Net
                 return null;
             }
 
-            var stream = new HttpResponseStream(_request.ClientStream, _receiverHelper, (ex) =>
+            var stream = new HttpResponseStream(_request.ClientStream, _receiverHelper, ex =>
             {
                 if (ex != null)
                 {
@@ -1638,22 +1637,19 @@ namespace xNet.Net
 
         private string GetContentType()
         {
-            if (_headers.ContainsKey("Content-Type"))
+            string value;
+            if (!_headers.TryGetValue("Content-Type", out value)) return string.Empty;
+            var contentType = value;
+
+            // Ищем позицию, где заканчивается описание типа контента и начинается описание его параметров.
+            var endTypePos = contentType.IndexOf(';');
+
+            if (endTypePos != -1)
             {
-                var contentType = _headers["Content-Type"];
-
-                // Ищем позицию, где заканчивается описание типа контента и начинается описание его параметров.
-                var endTypePos = contentType.IndexOf(';');
-
-                if (endTypePos != -1)
-                {
-                    contentType = contentType.Substring(0, endTypePos);
-                }
-
-                return contentType;
+                contentType = contentType.Substring(0, endTypePos);
             }
 
-            return string.Empty;
+            return contentType;
         }
 
         #endregion
