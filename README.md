@@ -10,4 +10,4 @@ Classes for work with multithreading: a multithreaded bypassing the collection, 
 
 Original repo: https://github.com/X-rus/xNet
 
-https://raw.githubusercontent.com/Education-Paleolithic/xNet/master/Dependencies%20Graph.png
+![](https://raw.githubusercontent.com/Education-Paleolithic/xNet/master/Dependencies%20Graph.png)
