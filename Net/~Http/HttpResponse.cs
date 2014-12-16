@@ -1173,7 +1173,7 @@ namespace xNet.Net
 
             // Если пришёл ответ без тела сообщения.
             if (ContentLength == 0 ||
-                Method == HttpMethod.HEAD || Method == HttpMethod.DELETE ||
+                Method == HttpMethod.Head || Method == HttpMethod.Delete ||
                 StatusCode == HttpStatusCode.Continue || StatusCode == HttpStatusCode.NoContent ||
                 StatusCode == HttpStatusCode.NotModified)
             {

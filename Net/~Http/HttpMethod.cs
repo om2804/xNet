@@ -6,10 +6,10 @@ namespace xNet.Net
     /// </summary>
     public enum HttpMethod
     {
-        GET,
-        HEAD,
-        DELETE,
-        POST,
-        PUT
+        Get,
+        Head,
+        Delete,
+        Post,
+        Put
     }
 }

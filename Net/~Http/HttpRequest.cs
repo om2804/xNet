@@ -761,7 +761,7 @@ namespace xNet.Net
                 _addedUrlParams = urlParams;
             }
 
-            return Raw(HttpMethod.GET, address);
+            return Raw(HttpMethod.Get, address);
         }
 
         /// <summary>
@@ -779,7 +779,7 @@ namespace xNet.Net
                 _addedUrlParams = urlParams;
             }
 
-            return Raw(HttpMethod.GET, address);
+            return Raw(HttpMethod.Get, address);
         }
 
         #endregion
@@ -796,7 +796,7 @@ namespace xNet.Net
         /// <exception cref="xNet.Net.HttpException">Ошибка при работе с HTTP-протоколом.</exception>
         public HttpResponse Post(string address)
         {
-            return Raw(HttpMethod.POST, address);
+            return Raw(HttpMethod.Post, address);
         }
 
         /// <summary>
@@ -808,7 +808,7 @@ namespace xNet.Net
         /// <exception cref="xNet.Net.HttpException">Ошибка при работе с HTTP-протоколом.</exception>
         public HttpResponse Post(Uri address)
         {
-            return Raw(HttpMethod.POST, address);
+            return Raw(HttpMethod.Post, address);
         }
 
         /// <summary>
@@ -836,7 +836,7 @@ namespace xNet.Net
 
             #endregion
 
-            return Raw(HttpMethod.POST, address, new FormUrlEncodedContent(reqParams, dontEscape, CharacterSet));
+            return Raw(HttpMethod.Post, address, new FormUrlEncodedContent(reqParams, dontEscape, CharacterSet));
         }
 
         /// <summary>
@@ -863,7 +863,7 @@ namespace xNet.Net
 
             #endregion
 
-            return Raw(HttpMethod.POST, address, new FormUrlEncodedContent(reqParams, dontEscape, CharacterSet));
+            return Raw(HttpMethod.Post, address, new FormUrlEncodedContent(reqParams, dontEscape, CharacterSet));
         }
 
         /// <summary>
@@ -919,7 +919,7 @@ namespace xNet.Net
                 ContentType = contentType
             };
 
-            return Raw(HttpMethod.POST, address, content);
+            return Raw(HttpMethod.Post, address, content);
         }
 
         /// <summary>
@@ -973,7 +973,7 @@ namespace xNet.Net
                 ContentType = contentType
             };
 
-            return Raw(HttpMethod.POST, address, content);
+            return Raw(HttpMethod.Post, address, content);
         }
 
         /// <summary>
@@ -1022,7 +1022,7 @@ namespace xNet.Net
                 ContentType = contentType
             };
 
-            return Raw(HttpMethod.POST, address, content);
+            return Raw(HttpMethod.Post, address, content);
         }
 
         /// <summary>
@@ -1067,7 +1067,7 @@ namespace xNet.Net
                 ContentType = contentType
             };
 
-            return Raw(HttpMethod.POST, address, content);
+            return Raw(HttpMethod.Post, address, content);
         }
 
         /// <summary>
@@ -1116,7 +1116,7 @@ namespace xNet.Net
                 ContentType = contentType
             };
 
-            return Raw(HttpMethod.POST, address, content);
+            return Raw(HttpMethod.Post, address, content);
         }
 
         /// <summary>
@@ -1161,7 +1161,7 @@ namespace xNet.Net
                 ContentType = contentType
             };
 
-            return Raw(HttpMethod.POST, address, content);
+            return Raw(HttpMethod.Post, address, content);
         }
 
         /// <summary>
@@ -1197,7 +1197,7 @@ namespace xNet.Net
 
             #endregion
 
-            return Raw(HttpMethod.POST, address, new FileContent(path));
+            return Raw(HttpMethod.Post, address, new FileContent(path));
         }
 
         /// <summary>
@@ -1229,7 +1229,7 @@ namespace xNet.Net
 
             #endregion
 
-            return Raw(HttpMethod.POST, address, new FileContent(path));
+            return Raw(HttpMethod.Post, address, new FileContent(path));
         }
 
         /// <summary>
@@ -1256,7 +1256,7 @@ namespace xNet.Net
 
             #endregion
 
-            return Raw(HttpMethod.POST, address, content);
+            return Raw(HttpMethod.Post, address, content);
         }
 
         /// <summary>
@@ -1282,7 +1282,7 @@ namespace xNet.Net
 
             #endregion
 
-            return Raw(HttpMethod.POST, address, content);
+            return Raw(HttpMethod.Post, address, content);
         }
 
         #endregion
@@ -1352,7 +1352,7 @@ namespace xNet.Net
                 address = uriBuilder.Uri;
             }
 
-            if (!(method == HttpMethod.POST || method == HttpMethod.PUT))
+            if (!(method == HttpMethod.Post || method == HttpMethod.Put))
             {
                 content = null;
             }
@@ -2212,7 +2212,7 @@ namespace xNet.Net
 
                 ClearRequestData();
 
-                return SendRequest(HttpMethod.GET, _response.RedirectAddress, null);
+                return SendRequest(HttpMethod.Get, _response.RedirectAddress, null);
             }
 
             _redirectionCount = 0;
