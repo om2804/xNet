@@ -11,9 +11,6 @@ namespace xNet.Net
     /// </summary>
     public class ChainProxyClient : ProxyClient
     {
-        private List<ProxyClient> _proxies = new List<ProxyClient>();
-
-
         #region Свойства (открытые)
 
         /// <summary>
@@ -24,13 +21,7 @@ namespace xNet.Net
         /// <summary>
         /// Возвращает список цепочки прокси-серверов.
         /// </summary>
-        public List<ProxyClient> Proxies
-        {
-            get
-            {
-                return _proxies;
-            }
-        }
+        public List<ProxyClient> Proxies { get; } = new List<ProxyClient>();
 
         #region Переопределённые
 
@@ -174,7 +165,7 @@ namespace xNet.Net
         {
             #region Проверка состояния
 
-            if (_proxies.Count == 0)
+            if (Proxies.Count == 0)
             {
                 throw new InvalidOperationException(
                     Resources.InvalidOperationException_ChainProxyClient_NotProxies);
@@ -186,27 +177,27 @@ namespace xNet.Net
 
             if (EnableShuffle)
             {
-                proxies = _proxies.ToList();
+                proxies = Proxies.ToList();
 
                 // Перемешиваем прокси.
-                for (int i = 0; i < proxies.Count; i++)
+                for (var i = 0; i < proxies.Count; i++)
                 {
-                    int randI = Rand.Next(proxies.Count);
+                    var randI = Rand.Next(proxies.Count);
 
-                    ProxyClient proxy = proxies[i];
+                    var proxy = proxies[i];
                     proxies[i] = proxies[randI];
                     proxies[randI] = proxy;
                 }
             }
             else
             {
-                proxies = _proxies;
+                proxies = Proxies;
             }
 
-            int length = proxies.Count - 1;
-            TcpClient curTcpClient = tcpClient;
+            var length = proxies.Count - 1;
+            var curTcpClient = tcpClient;
 
-            for (int i = 0; i < length; i++)
+            for (var i = 0; i < length; i++)
             {
                 curTcpClient = proxies[i].CreateConnection(
                     proxies[i + 1].Host, proxies[i + 1].Port, curTcpClient);
@@ -226,7 +217,7 @@ namespace xNet.Net
         {
             var strBuilder = new StringBuilder();
 
-            foreach (var proxy in _proxies)
+            foreach (var proxy in Proxies)
             {
                 strBuilder.AppendLine(proxy.ToString());
             }
@@ -242,7 +233,7 @@ namespace xNet.Net
         {
             var strBuilder = new StringBuilder();
 
-            foreach (var proxy in _proxies)
+            foreach (var proxy in Proxies)
             {
                 strBuilder.AppendLine(proxy.ToExtendedString());
             }
@@ -268,7 +259,7 @@ namespace xNet.Net
 
             #endregion
 
-            _proxies.Add(proxy);
+            Proxies.Add(proxy);
         }
 
         /// <summary>
@@ -280,7 +271,7 @@ namespace xNet.Net
         /// <exception cref="System.FormatException">Формат порта является неправильным.</exception>
         public void AddHttpProxy(string proxyAddress)
         {
-            _proxies.Add(HttpProxyClient.Parse(proxyAddress));
+            Proxies.Add(HttpProxyClient.Parse(proxyAddress));
         }
 
         /// <summary>
@@ -292,7 +283,7 @@ namespace xNet.Net
         /// <exception cref="System.FormatException">Формат порта является неправильным.</exception>
         public void AddSocks4Proxy(string proxyAddress)
         {
-            _proxies.Add(Socks4ProxyClient.Parse(proxyAddress));
+            Proxies.Add(Socks4ProxyClient.Parse(proxyAddress));
         }
 
         /// <summary>
@@ -302,9 +293,9 @@ namespace xNet.Net
         /// <exception cref="System.ArgumentNullException">Значение параметра <paramref name="proxyAddress"/> равно <see langword="null"/>.</exception>
         /// <exception cref="System.ArgumentException">Значение параметра <paramref name="proxyAddress"/> является пустой строкой.</exception>
         /// <exception cref="System.FormatException">Формат порта является неправильным.</exception>
-        public void AddSocks4aProxy(string proxyAddress)
+        public void AddSocks4AProxy(string proxyAddress)
         {
-            _proxies.Add(Socks4aProxyClient.Parse(proxyAddress));
+            Proxies.Add(Socks4aProxyClient.Parse(proxyAddress));
         }
 
         /// <summary>
@@ -316,7 +307,7 @@ namespace xNet.Net
         /// <exception cref="System.FormatException">Формат порта является неправильным.</exception>
         public void AddSocks5Proxy(string proxyAddress)
         {
-            _proxies.Add(Socks5ProxyClient.Parse(proxyAddress));
+            Proxies.Add(Socks5ProxyClient.Parse(proxyAddress));
         }
 
         #endregion
