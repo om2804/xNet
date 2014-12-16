@@ -109,12 +109,12 @@ namespace xNet
 
             #endregion
 
-            int minValue = (onlyLetters) ? 1 : 0;
+            var minValue = (onlyLetters) ? 1 : 0;
             var strBuilder = new StringBuilder(length);
 
             lock (_rand)
             {
-                for (int i = 0; i < length; ++i)
+                for (var i = 0; i < length; ++i)
                 {
                     switch (_rand.Next(minValue, 3))
                     {
@@ -149,12 +149,12 @@ namespace xNet
                 return string.Empty;
             }
 
-            int begPosition = -1;
+            var begPosition = -1;
             var separatorsPos = new List<int>();
             var strBuilder = new StringBuilder(sourceStr);
 
             // Регулярные выражения? Не, не слышал.
-            for (int i = 0; i < strBuilder.Length; ++i)
+            for (var i = 0; i < strBuilder.Length; ++i)
             {
                 if (strBuilder[i] == '{')
                 {
@@ -162,7 +162,7 @@ namespace xNet
                 }
                 else if (strBuilder[i] == '}' && begPosition != -1)
                 {
-                    for (int j = begPosition + 1; j < i; ++j)
+                    for (var j = begPosition + 1; j < i; ++j)
                     {
                         if (strBuilder[j] == '|')
                         {
@@ -170,8 +170,8 @@ namespace xNet
                         }
                     }
 
-                    int offset = strBuilder.Length;
-                    int randValueIndex = Next(0, separatorsPos.Count + 1);
+                    var offset = strBuilder.Length;
+                    var randValueIndex = Next(0, separatorsPos.Count + 1);
 
                     if (separatorsPos.Count == 0)
                     {
