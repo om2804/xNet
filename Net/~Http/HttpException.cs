@@ -7,8 +7,13 @@ namespace xNet.Net
     /// <summary>
     /// Исключение, которое выбрасывается, в случае возникновения ошибки при работе с HTTP-протоколом.
     /// </summary>
-    public sealed class HttpException : NetException, ISerializable
+    public sealed class HttpException : NetException
     {
+        internal static HttpException CreateHttpException(SerializationInfo serializationInfo, StreamingContext streamingContext)
+        {
+            return new HttpException(serializationInfo, streamingContext);
+        }
+
         #region Свойства (открытые)
 
         /// <summary>
@@ -64,7 +69,7 @@ namespace xNet.Net
         /// </summary>
         /// <param name="serializationInfo">Экземпляр класса <see cref="SerializationInfo"/>, который содержит сведения, требуемые для сериализации нового экземпляра класса <see cref="HttpException"/>.</param>
         /// <param name="streamingContext">Экземпляр класса <see cref="StreamingContext"/>, содержащий источник сериализованного потока, связанного с новым экземпляром класса <see cref="HttpException"/>.</param>
-        protected HttpException(SerializationInfo serializationInfo, StreamingContext streamingContext)
+        private HttpException(SerializationInfo serializationInfo, StreamingContext streamingContext)
             : base(serializationInfo, streamingContext) { }
 
 
