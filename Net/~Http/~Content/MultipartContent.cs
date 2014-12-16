@@ -309,8 +309,8 @@ namespace xNet.Net
 
             #endregion
 
-            byte[] newLineBytes = Encoding.ASCII.GetBytes("\r\n");
-            byte[] boundaryBytes = Encoding.ASCII.GetBytes("--" + _boundary + "\r\n");
+            var newLineBytes = Encoding.ASCII.GetBytes("\r\n");
+            var boundaryBytes = Encoding.ASCII.GetBytes("--" + _boundary + "\r\n");
 
             foreach (var element in _elements)
             {
@@ -329,7 +329,7 @@ namespace xNet.Net
                         FieldTemplate, element.Name);
                 }
 
-                byte[] fieldBytes = Encoding.ASCII.GetBytes(field);
+                var fieldBytes = Encoding.ASCII.GetBytes(field);
                 stream.Write(fieldBytes, 0, fieldBytes.Length);
 
                 element.Content.WriteTo(stream);
@@ -361,15 +361,13 @@ namespace xNet.Net
         /// <param name="disposing">Значение <see langword="true"/> позволяет освободить управляемые и неуправляемые ресурсы; значение <see langword="false"/> позволяет освободить только неуправляемые ресурсы.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && _elements != null)
+            if (!disposing || _elements == null) return;
+            foreach (var element in _elements)
             {
-                foreach (var element in _elements)
-                {
-                    element.Content.Dispose();
-                }
-
-                _elements = null;
+                element.Content.Dispose();
             }
+
+            _elements = null;
         }
 
 

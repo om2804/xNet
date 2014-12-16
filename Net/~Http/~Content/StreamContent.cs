@@ -103,7 +103,7 @@ namespace xNet.Net
 
             while (true)
             {
-                int bytesRead = _content.Read(buffer, 0, buffer.Length);
+                var bytesRead = _content.Read(buffer, 0, buffer.Length);
 
                 if (bytesRead == 0)
                 {
@@ -123,11 +123,9 @@ namespace xNet.Net
         /// <param name="disposing">Значение <see langword="true"/> позволяет освободить управляемые и неуправляемые ресурсы; значение <see langword="false"/> позволяет освободить только неуправляемые ресурсы.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && _content != null)
-            {
-                _content.Dispose();
-                _content = null;
-            }
+            if (!disposing || _content == null) return;
+            _content.Dispose();
+            _content = null;
         }
 
 
