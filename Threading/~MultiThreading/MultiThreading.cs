@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Threading;
@@ -54,16 +53,15 @@ namespace xNet.Threading
         private bool _canceling;
         private readonly ReaderWriterLockSlim _lockForCanceling = new ReaderWriterLockSlim();
 
-        private object _lockForEndThread = new object();
+        private readonly object _lockForEndThread = new object();
 
-        private AsyncOperation _asyncOperation;
-        private SendOrPostCallback _callbackEndWork;
+        private readonly SendOrPostCallback _callbackEndWork;
 
         private EventHandler<EventArgs> _beginningWorkHandler;
         private EventHandler<EventArgs> _workCompletedAsyncEvent;
         private EventHandler<MultiThreadingRepeatEventArgs> _repeatCompletedHandler;
-        private AsyncEvent<MultiThreadingProgressEventArgs> _progressChangedAsyncEvent;
-        private AsyncEvent<EventArgs> _cancelingWorkAsyncEvent;
+        private readonly AsyncEvent<MultiThreadingProgressEventArgs> _progressChangedAsyncEvent;
+        private readonly AsyncEvent<EventArgs> _cancelingWorkAsyncEvent;
 
         #endregion
 
@@ -79,10 +77,7 @@ namespace xNet.Threading
             {
                 _beginningWorkHandler += value;
             }
-            remove
-            {
-                _beginningWorkHandler -= value;
-            }
+            remove { if (_beginningWorkHandler != null) _beginningWorkHandler -= value; }
         }
 
         /// <summary>
@@ -95,10 +90,7 @@ namespace xNet.Threading
             {
                 _workCompletedAsyncEvent += value;
             }
-            remove
-            {
-                _workCompletedAsyncEvent -= value;
-            }
+            remove { if (_workCompletedAsyncEvent != null) _workCompletedAsyncEvent -= value; }
         }
 
         /// <summary>
@@ -110,10 +102,7 @@ namespace xNet.Threading
             {
                 _repeatCompletedHandler += value;
             }
-            remove
-            {
-                _repeatCompletedHandler -= value;
-            }
+            remove { if (_repeatCompletedHandler != null) _repeatCompletedHandler -= value; }
         }
 
         /// <summary>
@@ -126,10 +115,7 @@ namespace xNet.Threading
             {
                 _progressChangedAsyncEvent.EventHandler += value;
             }
-            remove
-            {
-                _progressChangedAsyncEvent.EventHandler -= value;
-            }
+            remove { if (_progressChangedAsyncEvent != null) _progressChangedAsyncEvent.EventHandler -= value; }
         }
 
         /// <summary>
@@ -142,10 +128,7 @@ namespace xNet.Threading
             {
                 _cancelingWorkAsyncEvent.EventHandler += value;
             }
-            remove
-            {
-                _cancelingWorkAsyncEvent.EventHandler -= value;
-            }
+            remove { if (_cancelingWorkAsyncEvent != null) _cancelingWorkAsyncEvent.EventHandler -= value; }
         }
 
         #endregion
@@ -248,13 +231,7 @@ namespace xNet.Threading
         /// <summary>
         /// Возвращает объект для асинхронных операций.
         /// </summary>
-        protected AsyncOperation AsyncOperation
-        {
-            get
-            {
-                return _asyncOperation;
-            }
-        }
+        protected AsyncOperation AsyncOperation { get; private set; }
 
 
         /// <summary>
@@ -275,7 +252,7 @@ namespace xNet.Threading
 
             _threadCount = threadCount;
 
-            _callbackEndWork = new SendOrPostCallback(EndWorkCallback);
+            _callbackEndWork = EndWorkCallback;
 
             _cancelingWorkAsyncEvent = new AsyncEvent<EventArgs>(OnCancelingWork);
             _progressChangedAsyncEvent = new AsyncEvent<MultiThreadingProgressEventArgs>(OnProgressChanged);
@@ -320,7 +297,7 @@ namespace xNet.Threading
 
             try
             {
-                for (int i = 0; i < _threadCount; ++i)
+                for (var i = 0; i < _threadCount; ++i)
                 {
                     StartThread(Thread, action);
                 }
@@ -380,14 +357,14 @@ namespace xNet.Threading
 
             #endregion
 
-            int range = toExclusive - fromInclusive;
+            var range = toExclusive - fromInclusive;
 
             if (range == 0)
             {
                 return;
             }
 
-            int threadCount = _threadCount;
+            var threadCount = _threadCount;
 
             if (threadCount > range)
             {
@@ -396,23 +373,23 @@ namespace xNet.Threading
 
             InitBeforeRun(threadCount);
 
-            int pos = 0;
-            ForParams forParams;
-            int[] threadsIteration = CalculateThreadsIterations(range, threadCount);
+            var pos = 0;
+            var threadsIteration = CalculateThreadsIterations(range, threadCount);
 
             try
             {
-                for (int i = 0; i < threadsIteration.Length; i++)
+                foreach (var i in threadsIteration)
                 {
+                    ForParams forParams;
                     forParams.Action = action;
 
                     // Высчитываем индексы диапазона итераций для текущего потока.
                     forParams.Begin = pos + fromInclusive;
-                    forParams.End = (pos + threadsIteration[i]) + fromInclusive;
+                    forParams.End = (pos + i) + fromInclusive;
 
                     StartThread(ForInThread, forParams);
 
-                    pos += threadsIteration[i];
+                    pos += i;
                 }
             }
             catch (Exception)
@@ -465,11 +442,11 @@ namespace xNet.Threading
 
             if (source is IList<T>)
             {
-                RunForEachList<T>(source, action);
+                RunForEachList(source, action);
             }
             else
             {
-                RunForEachOther<T>(source, action);
+                RunForEachOther(source, action);
             }
         }
 
@@ -486,7 +463,7 @@ namespace xNet.Threading
         {
             ThrowIfDisposed();
 
-            _progressChangedAsyncEvent.Post(_asyncOperation,
+            _progressChangedAsyncEvent.Post(AsyncOperation,
                 this, new MultiThreadingProgressEventArgs(value));
         }
 
@@ -518,11 +495,9 @@ namespace xNet.Threading
 
             try
             {
-                if (!_canceling)
-                {
-                    _canceling = true;
-                    _cancelingWorkAsyncEvent.Post(_asyncOperation, this, EventArgs.Empty);
-                }
+                if (_canceling) return;
+                _canceling = true;
+                _cancelingWorkAsyncEvent.Post(AsyncOperation, this, EventArgs.Empty);
             }
             finally
             {
@@ -548,26 +523,16 @@ namespace xNet.Threading
         /// <param name="disposing">Значение <see langword="true"/> позволяет освободить управляемые и неуправляемые ресурсы; значение <see langword="false"/> позволяет освободить только неуправляемые ресурсы.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (disposing && !_disposed)
-            {
-                _disposed = true;
-                _lockForCanceling.Dispose();
-            }
+            if (!disposing || _disposed) return;
+            _disposed = true;
+            _lockForCanceling.Dispose();
         }
 
         /// <summary>
         /// Вызывает событие <see cref="BeginningWork"/>.
         /// </summary>
         /// <param name="e">Аргументы события.</param>
-        protected virtual void OnBeginningWork(EventArgs e)
-        {
-            EventHandler<EventArgs> eventHandler = _beginningWorkHandler;
-
-            if (eventHandler != null)
-            {
-                eventHandler(this, e);
-            }
-        }
+        protected virtual void OnBeginningWork(EventArgs e) => _beginningWorkHandler?.Invoke(this, e);
 
         /// <summary>
         /// Вызывает событие <see cref="WorkCompleted"/>.
@@ -575,7 +540,7 @@ namespace xNet.Threading
         /// <param name="e">Аргументы события.</param>
         protected virtual void OnWorkCompleted(EventArgs e)
         {
-            EventHandler<EventArgs> eventHandler = _workCompletedAsyncEvent;
+            var eventHandler = _workCompletedAsyncEvent;
 
             if (eventHandler != null)
             {
@@ -587,33 +552,19 @@ namespace xNet.Threading
         /// Вызывает событие <see cref="RepeatCompleted"/>.
         /// </summary>
         /// <param name="e">Аргументы события.</param>
-        protected virtual void OnRepeatCompleted(MultiThreadingRepeatEventArgs e)
-        {
-            EventHandler<MultiThreadingRepeatEventArgs> eventHandler = _repeatCompletedHandler;
-
-            if (eventHandler != null)
-            {
-                eventHandler(this, e);
-            }
-        }
+        protected virtual void OnRepeatCompleted(MultiThreadingRepeatEventArgs e) => _repeatCompletedHandler?.Invoke(this, e);
 
         /// <summary>
         /// Вызывает событие <see cref="ProgressChanged"/>.
         /// </summary>
         /// <param name="e">Аргументы события.</param>
-        protected virtual void OnProgressChanged(MultiThreadingProgressEventArgs e)
-        {
-            _progressChangedAsyncEvent.On(this, e);
-        }
+        protected virtual void OnProgressChanged(MultiThreadingProgressEventArgs e) => _progressChangedAsyncEvent.On(this, e);
 
         /// <summary>
         /// Вызывает событие <see cref="CancelingWork"/>.
         /// </summary>
         /// <param name="e">Аргументы события.</param>
-        protected virtual void OnCancelingWork(EventArgs e)
-        {
-            _cancelingWorkAsyncEvent.On(this, e);
-        }
+        protected virtual void OnCancelingWork(EventArgs e) => _cancelingWorkAsyncEvent.On(this, e);
 
         #endregion
 
@@ -628,7 +579,7 @@ namespace xNet.Threading
 
             if (needCreateBarrierForReps)
             {
-                _barrierForReps = new Barrier(threadCount, (b) =>
+                _barrierForReps = new Barrier(threadCount, b =>
                     {
                         if (!Canceling)
                         {
@@ -639,7 +590,7 @@ namespace xNet.Threading
             }
 
             _canceling = false;
-            _asyncOperation = AsyncOperationManager.CreateOperation(new object());
+            AsyncOperation = AsyncOperationManager.CreateOperation(new object());
 
             Working = true;
 
@@ -652,16 +603,12 @@ namespace xNet.Threading
             {
                 --_currentThreadCount;
 
-                if (_currentThreadCount == 0)
-                {
-                    _asyncOperation.PostOperationCompleted(
-                        _callbackEndWork, new EventArgs());
+                if (_currentThreadCount != 0) return false;
+                AsyncOperation.PostOperationCompleted(
+                    _callbackEndWork, new EventArgs());
 
-                    return true;
-                }
+                return true;
             }
-
-            return false;
         }
 
         private void EndWork()
@@ -674,7 +621,7 @@ namespace xNet.Threading
                 _barrierForReps = null;
             }
 
-            _asyncOperation = null;
+            AsyncOperation = null;
         }
 
         private void EndWorkCallback(object param)
@@ -683,25 +630,25 @@ namespace xNet.Threading
             OnWorkCompleted(param as EventArgs);
         }
 
-        private int[] CalculateThreadsIterations(int iterationCount, int threadsCount)
+        private static int[] CalculateThreadsIterations(int iterationCount, int threadsCount)
         {
             // Список итераций для всех потоков.
-            int[] threadsIteration = new int[threadsCount];
+            var threadsIteration = new int[threadsCount];
 
             // Число итераций для одного потока (без учёта остатка).
-            int iterationOnOneThread = iterationCount / threadsCount;
+            var iterationOnOneThread = iterationCount / threadsCount;
 
-            for (int i = 0; i < threadsIteration.Length; ++i)
+            for (var i = 0; i < threadsIteration.Length; ++i)
             {
                 threadsIteration[i] = iterationOnOneThread;
             }
 
-            int index = 0;
-            int balance = iterationCount -
+            var index = 0;
+            var balance = iterationCount -
                 (threadsCount * iterationOnOneThread);
 
             // Распределяем оставшиеся итерации между потоками.
-            for (int i = 0; i < balance; ++i)
+            for (var i = 0; i < balance; ++i)
             {
                 ++threadsIteration[index];
 
@@ -716,7 +663,7 @@ namespace xNet.Threading
 
         #region Запуск потоков
 
-        private void StartThread(Action<object> body, object param)
+        private static void StartThread(Action<object> body, object param)
         {
             var thread = new Thread(new ParameterizedThreadStart(body))
             {
@@ -729,15 +676,16 @@ namespace xNet.Threading
         private void RunForEachList<T>(IEnumerable<T> source, Action<T> action)
         {
             var list = source as IList<T>;
-           
-            int range = list.Count;
+
+            if (list == null) return;
+            var range = list.Count;
 
             if (range == 0)
             {
                 return;
             }
 
-            int threadCount = _threadCount;
+            var threadCount = _threadCount;
 
             if (threadCount > range)
             {
@@ -746,24 +694,24 @@ namespace xNet.Threading
 
             InitBeforeRun(threadCount);
 
-            int pos = 0;
-            ForEachListParams<T> forEachParams;
-            int[] threadsIteration = CalculateThreadsIterations(range, threadCount);
+            var pos = 0;
+            var threadsIteration = CalculateThreadsIterations(range, threadCount);
 
             try
             {
-                for (int i = 0; i < threadsIteration.Length; i++)
+                foreach (var i in threadsIteration)
                 {
+                    ForEachListParams<T> forEachParams;
                     forEachParams.Action = action;
                     forEachParams.List = list;
 
                     // Высчитываем индексы диапазона итераций для текущего потока.
                     forEachParams.Begin = pos;
-                    forEachParams.End = pos + threadsIteration[i];
+                    forEachParams.End = pos + i;
 
                     StartThread(ForEachListInThread<T>, forEachParams);
 
-                    pos += threadsIteration[i];
+                    pos += i;
                 }
             }
             catch (Exception)
@@ -786,7 +734,7 @@ namespace xNet.Threading
 
             try
             {
-                for (int i = 0; i < _threadCount; ++i)
+                for (var i = 0; i < _threadCount; ++i)
                 {
                     StartThread(ForEachInThread<T>, forEachParams);
                 }
@@ -810,7 +758,7 @@ namespace xNet.Threading
             {
                 while (!Canceling)
                 {
-                    action();
+                    action?.Invoke();
 
                     if (_enableInfiniteRepeat)
                     {
@@ -847,7 +795,7 @@ namespace xNet.Threading
             {
                 do
                 {
-                    for (int i = forParams.Begin; i < forParams.End && !Canceling; ++i)
+                    for (var i = forParams.Begin; i < forParams.End && !Canceling; ++i)
                     {
                         forParams.Action(i);
                     }
@@ -882,13 +830,13 @@ namespace xNet.Threading
         private void ForEachListInThread<T>(object param)
         {
             var forEachParams = (ForEachListParams<T>)param;
-            IList<T> list = forEachParams.List;
+            var list = forEachParams.List;
 
             try
             {
                 do
                 {
-                    for (int i = forEachParams.Begin; i < forEachParams.End && !Canceling; ++i)
+                    for (var i = forEachParams.Begin; i < forEachParams.End && !Canceling; ++i)
                     {
                         forEachParams.Action(list[i]);
                     }
@@ -956,10 +904,7 @@ namespace xNet.Threading
 
                                 continue;
                             }
-                            else
-                            {
-                                break;
-                            }
+                            break;
                         }
 
                         value = forEachParams.Source.Current;
@@ -968,13 +913,13 @@ namespace xNet.Threading
                     forEachParams.Action(value);
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 Cancel();
             }
             finally
             {
-                bool isLastThread = EndThread();
+                var isLastThread = EndThread();
 
                 if (isLastThread)
                 {
