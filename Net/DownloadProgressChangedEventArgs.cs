@@ -12,24 +12,18 @@ namespace xNet.Net
         /// <summary>
         /// Возвращает количество полученных байтов.
         /// </summary>
-        public long BytesReceived { get; private set; }
+        public long BytesReceived { get; }
 
         /// <summary>
         /// Возвращает общее количество получаемых байтов.
         /// </summary>
         /// <value>Если общее количество получаемых байтов неизвестно, то значение -1.</value>
-        public long TotalBytesToReceive { get; private set; }
+        public long TotalBytesToReceive { get; }
 
         /// <summary>
         /// Возвращает процент полученных байтов.
         /// </summary>
-        public double ProgressPercentage
-        {
-            get
-            {
-                return ((double)BytesReceived / (double)TotalBytesToReceive) * 100.0;
-            }
-        }
+        public double ProgressPercentage => ((double)BytesReceived / TotalBytesToReceive) * 100.0;
 
         #endregion
 
