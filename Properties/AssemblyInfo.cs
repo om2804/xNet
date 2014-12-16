@@ -7,9 +7,9 @@ using System.Resources;
 // связанные со сборкой.
 [assembly: AssemblyTitle("xNet")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("X-rus")]
+[assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("xNet")]
-[assembly: AssemblyCopyright("Copyright © X-rus 2011-2014")]
+[assembly: AssemblyCopyright("Dont Cop")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -31,6 +31,8 @@ using System.Resources;
 // Можно задать все значения или принять номер построения и номер редакции по умолчанию, 
 // используя "*", как показано ниже:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("3.1.4.0")]
-[assembly: AssemblyFileVersion("3.1.4.0")]
+[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.0.0.0")]
 [assembly: NeutralResourcesLanguage("ru")]
+[assembly: AssemblyDescription("XNet moded.")]
+
