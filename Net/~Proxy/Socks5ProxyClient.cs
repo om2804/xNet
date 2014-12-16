@@ -18,28 +18,28 @@ namespace xNet.Net
         private const byte VersionNumber = 5;
         private const byte Reserved = 0x00;
         private const byte AuthMethodNoAuthenticationRequired = 0x00;
-        private const byte AuthMethodGssapi = 0x01;
+        public static byte AuthMethodGssapi { get; } = 0x01;
         private const byte AuthMethodUsernamePassword = 0x02;
-        private const byte AuthMethodIanaAssignedRangeBegin = 0x03;
-        private const byte AuthMethodIanaAssignedRangeEnd = 0x7f;
-        private const byte AuthMethodReservedRangeBegin = 0x80;
-        private const byte AuthMethodReservedRangeEnd = 0xfe;
+        public static byte AuthMethodIanaAssignedRangeBegin { get; } = 0x03;
+        public static byte AuthMethodIanaAssignedRangeEnd { get; } = 0x7f;
+        public static byte AuthMethodReservedRangeBegin { get; } = 0x80;
+        public static byte AuthMethodReservedRangeEnd { get; } = 0xfe;
         private const byte AuthMethodReplyNoAcceptableMethods = 0xff;
         private const byte CommandConnect = 0x01;
-        private const byte CommandBind = 0x02;
-        private const byte CommandUdpAssociate = 0x03;
+        public static byte CommandBind { get; } = 0x02;
+        public static byte CommandUdpAssociate { get; } = 0x03;
         private const byte CommandReplySucceeded = 0x00;
         private const byte CommandReplyGeneralSocksServerFailure = 0x01;
         private const byte CommandReplyConnectionNotAllowedByRuleset = 0x02;
         private const byte CommandReplyNetworkUnreachable = 0x03;
         private const byte CommandReplyHostUnreachable = 0x04;
         private const byte CommandReplyConnectionRefused = 0x05;
-        private const byte CommandReplyTTLExpired = 0x06;
+        private const byte CommandReplyTtlExpired = 0x06;
         private const byte CommandReplyCommandNotSupported = 0x07;
         private const byte CommandReplyAddressTypeNotSupported = 0x08;
-        private const byte AddressTypeIPV4 = 0x01;
+        private const byte AddressTypeIpv4 = 0x01;
         private const byte AddressTypeDomainName = 0x03;
-        private const byte AddressTypeIPV6 = 0x04;
+        private const byte AddressTypeIpv6 = 0x04;
 
         #endregion
 
@@ -105,16 +105,13 @@ namespace xNet.Net
         {
             ProxyClient proxy;
 
-            if (ProxyClient.TryParse(ProxyType.Socks5, proxyAddress, out proxy))
+            if (TryParse(ProxyType.Socks5, proxyAddress, out proxy))
             {
                 result = proxy as Socks5ProxyClient;
                 return true;
             }
-            else
-            {
-                result = null;
-                return false;
-            }
+            result = null;
+            return false;
         }
 
         #endregion
@@ -163,16 +160,11 @@ namespace xNet.Net
 
             #endregion
 
-            TcpClient curTcpClient = tcpClient;
-
-            if (curTcpClient == null)
-            {
-                curTcpClient = CreateConnectionToProxy();
-            }
+            var curTcpClient = tcpClient ?? CreateConnectionToProxy();
 
             try
             {
-                NetworkStream nStream = curTcpClient.GetStream();
+                var nStream = curTcpClient.GetStream();
 
                 InitialNegotiation(nStream);
                 SendCommand(nStream, CommandConnect, destinationHost, destinationPort);
@@ -213,7 +205,7 @@ namespace xNet.Net
             // +----+----------+----------+
             // | 1  |    1     | 1 to 255 |
             // +----+----------+----------+
-            byte[] request = new byte[3];
+            var request = new byte[3];
 
             request[0] = VersionNumber;
             request[1] = 1;
@@ -226,11 +218,11 @@ namespace xNet.Net
             // +----+--------+
             // | 1  |   1    |
             // +----+--------+
-            byte[] response = new byte[2];
+            var response = new byte[2];
 
             nStream.Read(response, 0, response.Length);
 
-            byte reply = response[1];
+            var reply = response[1];
 
             if (authMethod == AuthMethodUsernamePassword && reply == AuthMethodUsernamePassword)
             {
@@ -242,12 +234,12 @@ namespace xNet.Net
             }
         }
 
-        private void SendUsernameAndPassword(NetworkStream nStream)
+        private void SendUsernameAndPassword(Stream nStream)
         {
-            byte[] uname = string.IsNullOrEmpty(_username) ?
+            var uname = string.IsNullOrEmpty(_username) ?
                 new byte[0] : Encoding.ASCII.GetBytes(_username);
 
-            byte[] passwd = string.IsNullOrEmpty(_password) ?
+            var passwd = string.IsNullOrEmpty(_password) ?
                 new byte[0] : Encoding.ASCII.GetBytes(_password);
 
             // +----+------+----------+------+----------+
@@ -255,7 +247,7 @@ namespace xNet.Net
             // +----+------+----------+------+----------+
             // | 1  |  1   | 1 to 255 |  1   | 1 to 255 |
             // +----+------+----------+------+----------+
-            byte[] request = new byte[uname.Length + passwd.Length + 3];
+            var request = new byte[uname.Length + passwd.Length + 3];
 
             request[0] = 1;
             request[1] = (byte)uname.Length;
@@ -270,11 +262,11 @@ namespace xNet.Net
             // +----+--------+
             // | 1  |   1    |
             // +----+--------+
-            byte[] response = new byte[2];
+            var response = new byte[2];
 
             nStream.Read(response, 0, response.Length);
 
-            byte reply = response[1];
+            var reply = response[1];
 
             if (reply != CommandReplySucceeded)
             {
@@ -284,16 +276,16 @@ namespace xNet.Net
 
         private void SendCommand(NetworkStream nStream, byte command, string destinationHost, int destinationPort)
         {
-            byte aTyp = GetAddressType(destinationHost);
-            byte[] dstAddr = GetAddressBytes(aTyp, destinationHost);
-            byte[] dstPort = GetPortBytes(destinationPort);
+            var aTyp = GetAddressType(destinationHost);
+            var dstAddr = GetAddressBytes(aTyp, destinationHost);
+            var dstPort = GetPortBytes(destinationPort);
 
             // +----+-----+-------+------+----------+----------+
             // |VER | CMD |  RSV  | ATYP | DST.ADDR | DST.PORT |
             // +----+-----+-------+------+----------+----------+
             // | 1  |  1  | X'00' |  1   | Variable |    2     |
             // +----+-----+-------+------+----------+----------+
-            byte[] request = new byte[4 + dstAddr.Length + 2];
+            var request = new byte[4 + dstAddr.Length + 2];
 
             request[0] = VersionNumber;
             request[1] = command;
@@ -309,11 +301,11 @@ namespace xNet.Net
             // +----+-----+-------+------+----------+----------+
             // | 1  |  1  | X'00' |  1   | Variable |    2     |
             // +----+-----+-------+------+----------+----------+
-            byte[] response = new byte[255];
+            var response = new byte[255];
 
             nStream.Read(response, 0, response.Length);
 
-            byte reply = response[1];
+            var reply = response[1];
 
             // Если запрос не выполнен.
             if (reply != CommandReplySucceeded)
@@ -324,7 +316,7 @@ namespace xNet.Net
 
         private byte GetAddressType(string host)
         {
-            IPAddress ipAddr = null;
+            IPAddress ipAddr;
 
             if (!IPAddress.TryParse(host, out ipAddr))
             {
@@ -334,10 +326,10 @@ namespace xNet.Net
             switch (ipAddr.AddressFamily)
             {
                 case AddressFamily.InterNetwork:
-                    return AddressTypeIPV4;
+                    return AddressTypeIpv4;
 
                 case AddressFamily.InterNetworkV6:
-                    return AddressTypeIPV6;
+                    return AddressTypeIpv6;
 
                 default:
                     throw new ProxyException(string.Format(Resources.ProxyException_NotSupportedAddressType,
@@ -350,12 +342,12 @@ namespace xNet.Net
         {
             switch (addressType)
             {
-                case AddressTypeIPV4:
-                case AddressTypeIPV6:
+                case AddressTypeIpv4:
+                case AddressTypeIpv6:
                     return IPAddress.Parse(host).GetAddressBytes();
 
                 case AddressTypeDomainName:
-                    byte[] bytes = new byte[host.Length + 1];
+                    var bytes = new byte[host.Length + 1];
 
                     bytes[0] = (byte)host.Length;
                     Encoding.ASCII.GetBytes(host).CopyTo(bytes, 1);
@@ -367,9 +359,9 @@ namespace xNet.Net
             }
         }
 
-        private byte[] GetPortBytes(int port)
+        private static byte[] GetPortBytes(int port)
         {
-            byte[] array = new byte[2];
+            var array = new byte[2];
 
             array[0] = (byte)(port / 256);
             array[1] = (byte)(port % 256);
@@ -407,7 +399,7 @@ namespace xNet.Net
                     errorMessage = Resources.Socks5_CommandReplyConnectionRefused;
                     break;
 
-                case CommandReplyTTLExpired:
+                case CommandReplyTtlExpired:
                     errorMessage = Resources.Socks5_CommandReplyTTLExpired;
                     break;
 
@@ -424,7 +416,7 @@ namespace xNet.Net
                     break;
             }
 
-            string exceptionMsg = string.Format(
+            var exceptionMsg = string.Format(
                 Resources.ProxyException_CommandError, errorMessage, ToString());
 
             throw new ProxyException(exceptionMsg, this);
