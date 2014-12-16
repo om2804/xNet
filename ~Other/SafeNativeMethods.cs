@@ -8,7 +8,7 @@ namespace xNet
     internal static class SafeNativeMethods
     {
         [Flags]
-        internal enum InternetConnectionState : int
+        internal enum InternetConnectionState
         {
             INTERNET_CONNECTION_MODEM = 0x1,
             INTERNET_CONNECTION_LAN = 0x2,
