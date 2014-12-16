@@ -38,13 +38,7 @@ namespace xNet.Net
         /// <summary>
         /// Возвращает тип прокси-сервера.
         /// </summary>
-        public virtual ProxyType Type
-        {
-            get
-            {
-                return _type;
-            }
-        }
+        public virtual ProxyType Type => _type;
 
         /// <summary>
         /// Возвращает или задаёт хост прокси-сервера.
@@ -285,10 +279,10 @@ namespace xNet.Net
 
             #endregion
 
-            string[] values = proxyAddress.Split(':');
+            var values = proxyAddress.Split(':');
 
-            int port = 0;
-            string host = values[0];
+            var port = 0;
+            var host = values[0];
 
             if (values.Length >= 2)
             {
@@ -354,10 +348,10 @@ namespace xNet.Net
 
             #endregion
 
-            string[] values = proxyAddress.Split(':');
+            var values = proxyAddress.Split(':');
 
-            int port = 0;
-            string host = values[0];
+            var port = 0;
+            var host = values[0];
 
             if (values.Length >= 2)
             {
@@ -424,10 +418,7 @@ namespace xNet.Net
         /// Формирует строку вида - хост:порт, представляющую адрес прокси-сервера.
         /// </summary>
         /// <returns>Строка вида - хост:порт, представляющая адрес прокси-сервера.</returns>
-        public override string ToString()
-        {
-            return string.Format("{0}:{1}", _host, _port);
-        }
+        public override string ToString() => string.Format("{0}:{1}", _host, _port);
 
         /// <summary>
         /// Формирует строку вида - хост:порт:имя_пользователя:пароль. Последние два параметра добавляются, если они заданы.
@@ -439,14 +430,12 @@ namespace xNet.Net
 
             strBuilder.AppendFormat("{0}:{1}", _host, _port);
 
-            if (!string.IsNullOrEmpty(_username))
-            {
-                strBuilder.AppendFormat(":{0}", _username);
+            if (string.IsNullOrEmpty(_username)) return strBuilder.ToString();
+            strBuilder.AppendFormat(":{0}", _username);
 
-                if (!string.IsNullOrEmpty(_password))
-                {
-                    strBuilder.AppendFormat(":{0}", _password);
-                }
+            if (!string.IsNullOrEmpty(_password))
+            {
+                strBuilder.AppendFormat(":{0}", _password);
             }
 
             return strBuilder.ToString();
@@ -478,13 +467,8 @@ namespace xNet.Net
                 return false;
             }
 
-            if (_host.Equals(proxy._host,
-                StringComparison.OrdinalIgnoreCase) && _port == proxy._port)
-            {
-                return true;
-            }
-
-            return false;
+            return _host.Equals(proxy._host,
+                StringComparison.OrdinalIgnoreCase) && _port == proxy._port;
         }
 
         /// <summary>
@@ -492,17 +476,7 @@ namespace xNet.Net
         /// </summary>
         /// <param name="obj">Прокси-клиент для сравнения с данным экземпляром.</param>
         /// <returns>Значение <see langword="true"/>, если два прокси-клиента равны, иначе значение <see langword="false"/>.</returns>
-        public override bool Equals(object obj)
-        {
-            var proxy = obj as ProxyClient;
-
-            if (proxy == null)
-            {
-                return false;
-            }
-
-            return Equals(proxy);
-        }
+        public override bool Equals(object obj) => obj is ProxyClient && Equals((ProxyClient) obj);
 
         #endregion
 
@@ -522,27 +496,24 @@ namespace xNet.Net
 
             tcpClient = new TcpClient();
             Exception connectException = null;
-            ManualResetEventSlim connectDoneEvent = new ManualResetEventSlim();
+            var connectDoneEvent = new ManualResetEventSlim();
 
             try
             {
-                tcpClient.BeginConnect(_host, _port, new AsyncCallback(
-                    (ar) =>
+                tcpClient.BeginConnect(_host, _port, ar =>
+                {
+                    if (tcpClient.Client == null) return;
+                    try
                     {
-                        if (tcpClient.Client != null)
-                        {
-                            try
-                            {
-                                tcpClient.EndConnect(ar);
-                            }
-                            catch (Exception ex)
-                            {
-                                connectException = ex;
-                            }
+                        tcpClient.EndConnect(ar);
+                    }
+                    catch (Exception ex)
+                    {
+                        connectException = ex;
+                    }
 
-                            connectDoneEvent.Set();
-                        }
-                    }), tcpClient
+                    connectDoneEvent.Set();
+                }, tcpClient
                 );
             }
             #region Catch's
@@ -575,10 +546,7 @@ namespace xNet.Net
                 {
                     throw NewProxyException(Resources.ProxyException_FailedConnect, connectException);
                 }
-                else
-                {
-                    throw connectException;
-                }
+                throw connectException;
             }
 
             if (!tcpClient.Connected)
