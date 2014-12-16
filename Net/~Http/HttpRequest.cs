@@ -24,8 +24,8 @@ namespace xNet.Net
         {
             #region Поля (закрытые)
 
-            private Stream _baseStream;
-            private int _sendBufferSize;
+            private readonly Stream _baseStream;
+            private readonly int _sendBufferSize;
 
             #endregion
 
@@ -88,29 +88,20 @@ namespace xNet.Net
 
             public override int Read(byte[] buffer, int offset, int count)
             {
-                int bytesRead = _baseStream.Read(buffer, offset, count);
+                BytesReadCallback?.Invoke(_baseStream.Read(buffer, offset, count));
 
-                if (BytesReadCallback != null)
-                {
-                    BytesReadCallback(bytesRead);
-                }
-
-                return bytesRead;
+                return _baseStream.Read(buffer, offset, count);
             }
 
             public override void Write(byte[] buffer, int offset, int count)
             {
-                if (BytesWriteCallback == null)
-                {
-                    _baseStream.Write(buffer, offset, count);
-                }
-                else
-                {
-                    int index = 0;
+                var index = 0;
 
+                if (BytesWriteCallback != null)
+                {
                     while (count > 0)
                     {
-                        int bytesWrite = 0;
+                        int bytesWrite;
 
                         if (count >= _sendBufferSize)
                         {
@@ -131,6 +122,10 @@ namespace xNet.Net
                         BytesWriteCallback(bytesWrite);
                     }
                 }
+                else
+                {
+                    _baseStream.Write(buffer, offset, count);
+                }
             }
 
             #endregion
@@ -146,7 +141,7 @@ namespace xNet.Net
         #region Статические поля (закрытые)
 
         // Заголовки, которые можно задать только с помощью специального свойства/метода.
-        private static readonly List<string> _closedHeaders = new List<string>()
+        private static readonly List<string> ClosedHeaders = new List<string>()
         {
             "Accept-Encoding",
             "Authorization",
@@ -186,25 +181,18 @@ namespace xNet.Net
 
         #region Поля (закрытые)
 
-        private HttpResponse _response;
-
-        private TcpClient _tcpClient;
-        private Stream _clientStream;
-        private NetworkStream _clientNetworkStream;
-
         private ProxyClient _currentProxy;
 
         private int _connectTimeout = 60000;
         private int _readWriteTimeout = 60000;
 
-        private int _redirectionCount = 0;
+        private int _redirectionCount;
         private int _maximumAutomaticRedirections = 5;
 
         private HttpContent _content; // Отправляемые данные.
         private long _contentLength;
 
-        private readonly Dictionary<string, string> _headers =
-            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        private readonly Dictionary<string, string> _headers = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         // Временные данные, которые задаются через специальные методы.
         // Удаляются после первого запроса.
@@ -279,7 +267,7 @@ namespace xNet.Net
         /// <summary>
         /// Возвращает последний ответ от HTTP-сервера, полученный данным экземпляром класса.
         /// </summary>
-        public HttpResponse Response => _response;
+        public HttpResponse Response { get; private set; }
 
         /// <summary>
         /// Возвращает или задает прокси-клиент.
@@ -484,28 +472,16 @@ namespace xNet.Net
 
         #region Свойства (внутренние)
 
-        internal TcpClient TcpClient => _tcpClient;
+        internal TcpClient TcpClient { get; private set; }
 
-        internal Stream ClientStream => _clientStream;
+        internal Stream ClientStream { get; private set; }
 
-        internal NetworkStream ClientNetworkStream => _clientNetworkStream;
+        internal NetworkStream ClientNetworkStream { get; private set; }
 
         #endregion
 
 
-        private MultipartContent AddedMultipartData
-        {
-            get
-            {
-                if (_addedMultipartContent == null)
-                {
-                    _addedMultipartContent = new MultipartContent();
-                }
-
-                return _addedMultipartContent;
-            }
-        }
-
+        private MultipartContent AddedMultipartData => _addedMultipartContent ?? (_addedMultipartContent = new MultipartContent());
 
         #region Индексаторы (открытые)
 
@@ -1346,26 +1322,28 @@ namespace xNet.Net
             }
             else if (_addedUrlParams != null)
             {
-                var uriBuilder = new UriBuilder(address);
-                uriBuilder.Query = HttpHelper.ToQueryString(_addedUrlParams, true);
+                var uriBuilder = new UriBuilder(address) {Query = HttpHelper.ToQueryString(_addedUrlParams, true)};
 
                 address = uriBuilder.Uri;
             }
 
-            if (!(method == HttpMethod.Post || method == HttpMethod.Put))
+            if (method == HttpMethod.Post || method == HttpMethod.Put)
+            {
+                if (content == null)
+                {
+                    if (_addedParams != null)
+                    {
+                        content = new FormUrlEncodedContent(_addedParams, false, CharacterSet);
+                    }
+                    else if (_addedMultipartContent != null)
+                    {
+                        content = _addedMultipartContent;
+                    }
+                }
+            }
+            else
             {
                 content = null;
-            }
-            else if (content == null)
-            {
-                if (_addedParams != null)
-                {
-                    content = new FormUrlEncodedContent(_addedParams, false, CharacterSet);
-                }
-                else if (_addedMultipartContent != null)
-                {
-                    content = _addedMultipartContent;
-                }
             }
 
             try
@@ -1374,10 +1352,7 @@ namespace xNet.Net
             }
             finally
             {
-                if (content != null)
-                {
-                    content.Dispose();
-                }
+                content?.Dispose();
 
                 ClearRequestData();
             }
@@ -1463,10 +1438,7 @@ namespace xNet.Net
         /// <exception cref="System.ArgumentNullException">Значение параметра <paramref name="name"/> равно <see langword="null"/>.</exception>
         /// <exception cref="System.ArgumentException">Значение параметра <paramref name="name"/> является пустой строкой.</exception>
         /// <remarks>Данный элемент будет стёрт после первого запроса.</remarks>
-        public HttpRequest AddField(string name, object value = null)
-        {
-            return AddField(name, value, CharacterSet ?? Encoding.UTF8);
-        }
+        public HttpRequest AddField(string name, object value = null) => AddField(name, value, CharacterSet ?? Encoding.UTF8);
 
         /// <summary>
         /// Добавляет временный элемент Multipart/form данных.
@@ -1502,7 +1474,7 @@ namespace xNet.Net
 
             #endregion
 
-            string contentValue = (value == null ? string.Empty : value.ToString());
+            var contentValue = value?.ToString() ?? string.Empty;
 
             AddedMultipartData.Add(new StringContent(contentValue, encoding), name);
 
@@ -1899,15 +1871,7 @@ namespace xNet.Net
         /// </summary>
         /// <param name="name">Название куки.</param>
         /// <returns>Значение <see langword="true"/>, если указанные куки содержатся, иначе значение <see langword="false"/>.</returns>
-        public bool ContainsCookie(string name)
-        {
-            if (Cookies == null)
-            {
-                return false;
-            }
-
-            return Cookies.ContainsKey(name);
-        }
+        public bool ContainsCookie(string name) => Cookies != null && Cookies.ContainsKey(name);
 
         #region Работа с заголовками
 
@@ -1942,19 +1906,13 @@ namespace xNet.Net
         /// </summary>
         /// <param name="header">HTTP-заголовок.</param>
         /// <returns>Значение <see langword="true"/>, если указанный HTTP-заголовок содержится, иначе значение <see langword="false"/>.</returns>
-        public bool ContainsHeader(HttpHeader header)
-        {
-            return ContainsHeader(HttpHelper.HttpHeaders[header]);
-        }
+        public bool ContainsHeader(HttpHeader header) => ContainsHeader(HttpHelper.HttpHeaders[header]);
 
         /// <summary>
         /// Возвращает перечисляемую коллекцию HTTP-заголовков.
         /// </summary>
         /// <returns>Коллекция HTTP-заголовков.</returns>
-        public Dictionary<string, string>.Enumerator EnumerateHeaders()
-        {
-            return _headers.GetEnumerator();
-        }
+        public Dictionary<string, string>.Enumerator EnumerateHeaders() => _headers.GetEnumerator();
 
         /// <summary>
         /// Очищает все HTTP-заголовки.
@@ -1976,42 +1934,24 @@ namespace xNet.Net
         /// <param name="disposing">Значение <see langword="true"/> позволяет освободить управляемые и неуправляемые ресурсы; значение <see langword="false"/> позволяет освободить только неуправляемые ресурсы.</param>
         protected virtual void Dispose(bool disposing)
         {
-            if (disposing && _tcpClient != null)
-            {
-                _tcpClient.Close();
-                _tcpClient = null;
-                _clientStream = null;
-                _clientNetworkStream = null;
-            }
+            if (!disposing || TcpClient == null) return;
+            TcpClient.Close();
+            TcpClient = null;
+            ClientStream = null;
+            ClientNetworkStream = null;
         }
 
         /// <summary>
         /// Вызывает событие <see cref="UploadProgressChanged"/>.
         /// </summary>
         /// <param name="e">Аргументы события.</param>
-        protected virtual void OnUploadProgressChanged(UploadProgressChangedEventArgs e)
-        {
-            EventHandler<UploadProgressChangedEventArgs> eventHandler = _uploadProgressChangedHandler;
-
-            if (eventHandler != null)
-            {
-                eventHandler(this, e);
-            }
-        }
+        protected virtual void OnUploadProgressChanged(UploadProgressChangedEventArgs e) => _uploadProgressChangedHandler?.Invoke(this, e);
 
         /// <summary>
         /// Вызывает событие <see cref="DownloadProgressChanged"/>.
         /// </summary>
         /// <param name="e">Аргументы события.</param>
-        protected virtual void OnDownloadProgressChanged(DownloadProgressChangedEventArgs e)
-        {
-            EventHandler<DownloadProgressChangedEventArgs> eventHandler = _downloadProgressChangedHandler;
-
-            if (eventHandler != null)
-            {
-                eventHandler(this, e);
-            }
-        }
+        protected virtual void OnDownloadProgressChanged(DownloadProgressChangedEventArgs e) => _downloadProgressChangedHandler?.Invoke(this, e);
 
         #endregion
 
@@ -2027,12 +1967,12 @@ namespace xNet.Net
 
             Address = new Uri("/", UriKind.Relative);
 
-            _response = new HttpResponse(this);
+            Response = new HttpResponse(this);
         }
 
         private Uri CreateAbsoluteAddress(Uri relativeAddress)
         {
-            string address = relativeAddress.ToString();
+            var address = relativeAddress.ToString();
 
             if (address[0] != '/')
             {
@@ -2040,7 +1980,7 @@ namespace xNet.Net
             }
 
             var uriBuilder = new UriBuilder();
-            string[] pathAndQueryValues = address.Split('?');
+            var pathAndQueryValues = address.Split('?');
 
             uriBuilder.Path = pathAndQueryValues[0];
 
@@ -2053,12 +1993,10 @@ namespace xNet.Net
                 uriBuilder.Query = pathAndQueryValues[1];
             }
 
-            if (BaseAddress != null)
-            {
-                uriBuilder.Scheme = BaseAddress.Scheme;
-                uriBuilder.Host = BaseAddress.Host;
-                uriBuilder.Port = BaseAddress.Port;
-            }
+            if (BaseAddress == null) return uriBuilder.Uri;
+            uriBuilder.Scheme = BaseAddress.Scheme;
+            uriBuilder.Host = BaseAddress.Host;
+            uriBuilder.Port = BaseAddress.Port;
 
             return uriBuilder.Uri;
         }
@@ -2068,12 +2006,11 @@ namespace xNet.Net
         {
             _content = content;
 
-            if (_tcpClient != null &&
-                !_response.MessageBodyLoaded && !_response.HasError)
+            if (TcpClient != null && !Response.MessageBodyLoaded && !Response.HasError)
             {
                 try
                 {
-                    _response.None();
+                    Response.None();
                 }
                 catch (HttpException)
                 {
@@ -2081,15 +2018,15 @@ namespace xNet.Net
                 }
             }
 
-            bool createdNewConnection = false;
+            var createdNewConnection = false;
 
-            ProxyClient proxy = GetProxy();
+            var proxy = GetProxy();
 
             // Если нужно создать новое подключение.
-            if (_tcpClient == null || Address.Port != address.Port ||
+            if (TcpClient == null || Address.Port != address.Port ||
                 !Address.Host.Equals(address.Host, StringComparison.OrdinalIgnoreCase) ||
                 !Address.Scheme.Equals(address.Scheme, StringComparison.OrdinalIgnoreCase) ||
-                _response.HasError || _currentProxy != proxy)
+                Response.HasError || !Equals(_currentProxy, proxy))
             {
                 Address = address;
                 _currentProxy = proxy;
@@ -2108,28 +2045,21 @@ namespace xNet.Net
 
             try
             {
-                if (_content == null)
-                {
-                    _contentLength = 0;
-                }
-                else
-                {
-                    _contentLength = _content.CalculateContentLength();
-                }
+                _contentLength = _content?.CalculateContentLength() ?? 0;
 
-                byte[] startingLineBytes = Encoding.ASCII.GetBytes(GenerateStartingLine(method));
-                byte[] headersBytes = Encoding.ASCII.GetBytes(GenerateHeaders(method));
+                var startingLineBytes = Encoding.ASCII.GetBytes(GenerateStartingLine(method));
+                var headersBytes = Encoding.ASCII.GetBytes(GenerateHeaders(method));
 
                 _bytesSent = 0;
                 _totalBytesSent = startingLineBytes.Length + headersBytes.Length + _contentLength;
 
-                _clientStream.Write(startingLineBytes, 0, startingLineBytes.Length);
-                _clientStream.Write(headersBytes, 0, headersBytes.Length);
+                ClientStream.Write(startingLineBytes, 0, startingLineBytes.Length);
+                ClientStream.Write(headersBytes, 0, headersBytes.Length);
 
                 // Отправляем тело сообщения, если оно не пустое.
                 if (_content != null && _contentLength > 0)
                 {
-                    _content.WriteTo(_clientStream);
+                    _content.WriteTo(ClientStream);
                 }
             }
             catch (SecurityException ex)
@@ -2140,13 +2070,11 @@ namespace xNet.Net
             {
                 // Если это не первый запрос и включены постоянные соединения и до этого не было переподключения,
                 // то пробуем заново отправить запрос.
-                if (!createdNewConnection && KeepAlive && !reconnection)
-                {
-                    Dispose();
-                    return SendRequest(method, address, content, true);
-                }
-
-                throw NewHttpException(Resources.HttpException_FailedSendRequest, ex, HttpExceptionStatus.SendFailure);
+                if (createdNewConnection || !KeepAlive || reconnection)
+                    throw NewHttpException(Resources.HttpException_FailedSendRequest, ex,
+                        HttpExceptionStatus.SendFailure);
+                Dispose();
+                return SendRequest(method, address, content, true);
             }
 
             #endregion
@@ -2158,7 +2086,7 @@ namespace xNet.Net
                 _canReportBytesReceived = false;
 
                 _bytesReceived = 0;
-                _totalBytesReceived = _response.LoadResponse(method);
+                _totalBytesReceived = Response.LoadResponse(method);
 
                 _canReportBytesReceived = true;
             }
@@ -2167,14 +2095,10 @@ namespace xNet.Net
                 // Если был получен пустой ответ и до этого не было переподключения или
                 // если это не первый запрос и включены постоянные соединения и до этого не было переподключения,
                 // то пробуем заново отправить запрос.
-                if ((ex.EmptyMessageBody && !reconnection) ||
-                    (!createdNewConnection && KeepAlive && !reconnection))
-                {
-                    Dispose();
-                    return SendRequest(method, address, content, true);
-                }
-
-                throw;
+                if ((!ex.EmptyMessageBody || reconnection) && (createdNewConnection || !KeepAlive || reconnection))
+                    throw;
+                Dispose();
+                return SendRequest(method, address, content, true);
             }
 
             #endregion
@@ -2183,19 +2107,19 @@ namespace xNet.Net
 
             if (!IgnoreProtocolErrors)
             {
-                int statusCodeNum = (int)_response.StatusCode;
+                var statusCodeNum = (int)Response.StatusCode;
 
                 if (statusCodeNum >= 400 && statusCodeNum < 500)
                 {
                     throw new HttpException(string.Format(
                         Resources.HttpException_ClientError, statusCodeNum),
-                        HttpExceptionStatus.ProtocolError, _response.StatusCode);
+                        HttpExceptionStatus.ProtocolError, Response.StatusCode);
                 }
-                else if (statusCodeNum >= 500)
+                if (statusCodeNum >= 500)
                 {
                     throw new HttpException(string.Format(
                         Resources.HttpException_SeverError, statusCodeNum),
-                        HttpExceptionStatus.ProtocolError, _response.StatusCode);
+                        HttpExceptionStatus.ProtocolError, Response.StatusCode);
                 }
             }
 
@@ -2203,7 +2127,7 @@ namespace xNet.Net
 
             #region Переадресация
 
-            if (AllowAutoRedirect && _response.HasRedirect)
+            if (AllowAutoRedirect && Response.HasRedirect)
             {
                 if (++_redirectionCount > _maximumAutomaticRedirections)
                 {
@@ -2212,14 +2136,14 @@ namespace xNet.Net
 
                 ClearRequestData();
 
-                return SendRequest(HttpMethod.Get, _response.RedirectAddress, null);
+                return SendRequest(HttpMethod.Get, Response.RedirectAddress, null);
             }
 
             _redirectionCount = 0;
 
             #endregion
 
-            return _response;
+            return Response;
         }
 
         #region Создание подключения
@@ -2231,14 +2155,11 @@ namespace xNet.Net
                 try
                 {
                     var checkIp = IPAddress.Parse("127.0.0.1");
-                    IPAddress[] ips = Dns.GetHostAddresses(Address.Host);
+                    var ips = Dns.GetHostAddresses(Address.Host);
 
-                    foreach (var ip in ips)
+                    if (ips.Contains(checkIp))
                     {
-                        if (ip.Equals(checkIp))
-                        {
-                            return null;
-                        }
+                        return null;
                     }
                 }
                 catch (Exception ex)
@@ -2253,7 +2174,7 @@ namespace xNet.Net
                 }
             }
 
-            ProxyClient proxy = Proxy ?? GlobalProxy;
+            var proxy = Proxy ?? GlobalProxy;
 
             if (proxy == null && UseIeProxy && !WinInet.InternetConnected)
             {
@@ -2278,20 +2199,19 @@ namespace xNet.Net
 
                 try
                 {
-                    tcpClient.BeginConnect(host, port, new AsyncCallback(
-                        (ar) =>
+                    tcpClient.BeginConnect(host, port, ar =>
+                    {
+                        try
                         {
-                            try
-                            {
-                                tcpClient.EndConnect(ar);
-                            }
-                            catch (Exception ex)
-                            {
-                                connectException = ex;
-                            }
+                            tcpClient.EndConnect(ar);
+                        }
+                        catch (Exception ex)
+                        {
+                            connectException = ex;
+                        }
 
-                            connectDoneEvent.Set();
-                        }), tcpClient
+                        connectDoneEvent.Set();
+                    }, tcpClient
                     );
                 }
                 #region Catch's
@@ -2356,28 +2276,19 @@ namespace xNet.Net
 
         private void CreateConnection()
         {
-            _tcpClient = CreateTcpConnection(Address.Host, Address.Port);
-            _clientNetworkStream = _tcpClient.GetStream();
+            TcpClient = CreateTcpConnection(Address.Host, Address.Port);
+            ClientNetworkStream = TcpClient.GetStream();
 
             // Если требуется безопасное соединение.
             if (Address.Scheme.Equals("https", StringComparison.OrdinalIgnoreCase))
             {
                 try
                 {
-                    SslStream sslStream;
-
-                    if (SslCertificateValidatorCallback == null)
-                    {
-                        sslStream = new SslStream(_clientNetworkStream, false, HttpHelper.AcceptAllCertificationsCallback);
-                    }
-                    else
-                    {
-                        sslStream = new SslStream(_clientNetworkStream, false, SslCertificateValidatorCallback);
-                    }
+                    var sslStream = SslCertificateValidatorCallback == null ? new SslStream(ClientNetworkStream, false, HttpHelper.AcceptAllCertificationsCallback) : new SslStream(ClientNetworkStream, false, SslCertificateValidatorCallback);
 
                     sslStream.AuthenticateAsClient(Address.Host);
 
-                    _clientStream = sslStream;
+                    ClientStream = sslStream;
                 }
                 catch (Exception ex)
                 {
@@ -2391,27 +2302,24 @@ namespace xNet.Net
             }
             else
             {
-                _clientStream = _clientNetworkStream;
+                ClientStream = ClientNetworkStream;
             }
 
-            if (_uploadProgressChangedHandler != null ||
-                _downloadProgressChangedHandler != null)
+            if (_uploadProgressChangedHandler == null && _downloadProgressChangedHandler == null) return;
+            var httpWraperStream = new HttpWraperStream(
+                ClientStream, TcpClient.SendBufferSize);
+
+            if (_uploadProgressChangedHandler != null)
             {
-                var httpWraperStream = new HttpWraperStream(
-                    _clientStream, _tcpClient.SendBufferSize);
-
-                if (_uploadProgressChangedHandler != null)
-                {
-                    httpWraperStream.BytesWriteCallback = ReportBytesSent;
-                }
-
-                if (_downloadProgressChangedHandler != null)
-                {
-                    httpWraperStream.BytesReadCallback = ReportBytesReceived;
-                }
-
-                _clientStream = httpWraperStream;
+                httpWraperStream.BytesWriteCallback = ReportBytesSent;
             }
+
+            if (_downloadProgressChangedHandler != null)
+            {
+                httpWraperStream.BytesReadCallback = ReportBytesReceived;
+            }
+
+            ClientStream = httpWraperStream;
         }
 
         #endregion
@@ -2440,32 +2348,18 @@ namespace xNet.Net
 
         private string GetAuthorizationHeaderValue()
         {
-            string data = Convert.ToBase64String(Encoding.UTF8.GetBytes(
+            var data = Convert.ToBase64String(Encoding.UTF8.GetBytes(
                 string.Format("{0}:{1}", Username, Password)));
 
             return string.Format("Basic {0}", data);
         }
 
-        private string GetProxyAuthorizationHeaderValue(HttpProxyClient httpProxy)
-        {
-            string data = Convert.ToBase64String(Encoding.UTF8.GetBytes(
-                string.Format("{0}:{1}", httpProxy.Username, httpProxy.Password)));
-
-            return string.Format("Basic {0}", data);
-        }
+        private static string GetProxyAuthorizationHeaderValue(ProxyClient httpProxy) => string.Format("Basic {0}", Convert.ToBase64String(Encoding.UTF8.GetBytes(
+            string.Format("{0}:{1}", httpProxy.Username, httpProxy.Password))));
 
         private string GetLanguageHeaderValue()
         {
-            string cultureName;
-
-            if (Culture != null)
-            {
-                cultureName = Culture.Name;
-            }
-            else
-            {
-                cultureName = CultureInfo.CurrentCulture.Name;
-            }
+            var cultureName = Culture?.Name ?? CultureInfo.CurrentCulture.Name;
 
             if (cultureName.StartsWith("en"))
             {
@@ -2478,26 +2372,17 @@ namespace xNet.Net
 
         private string GetCharsetHeaderValue()
         {
-            if (CharacterSet == Encoding.UTF8)
+            if (Equals(CharacterSet, Encoding.UTF8))
             {
                 return "utf-8;q=0.7,*;q=0.3";
             }
 
-            string charsetName;
-
-            if (CharacterSet == null)
-            {
-                charsetName = Encoding.Default.WebName;
-            }
-            else
-            {
-                charsetName = CharacterSet.WebName;
-            }
+            var charsetName = CharacterSet?.WebName ?? Encoding.Default.WebName;
 
             return string.Format("{0},utf-8;q=0.7,*;q=0.3", charsetName);
         }
 
-        private void MergeHeaders(Dictionary<string, string> dic1, Dictionary<string, string> dic2)
+        private static void MergeHeaders(IDictionary<string, string> dic1, Dictionary<string, string> dic2)
         {
             foreach (var dicItem2 in dic2)
             {
@@ -2507,7 +2392,7 @@ namespace xNet.Net
 
         #endregion
 
-        private HttpProxyClient FindHttpProxyInChain(ChainProxyClient chainProxy)
+        private static HttpProxyClient FindHttpProxyInChain(ChainProxyClient chainProxy)
         {
             HttpProxyClient foundProxy = null;
 
@@ -2515,34 +2400,35 @@ namespace xNet.Net
             // В приоритете найти прокси, который требует авторизацию.
             foreach (var proxy in chainProxy.Proxies)
             {
-                if (proxy.Type == ProxyType.Http)
+                switch (proxy.Type)
                 {
-                    foundProxy = proxy as HttpProxyClient;
+                    case ProxyType.Http:
+                        foundProxy = proxy as HttpProxyClient;
 
-                    if (!string.IsNullOrEmpty(foundProxy.Username) ||
-                        !string.IsNullOrEmpty(foundProxy.Password))
-                    {
-                        return foundProxy;
-                    }
-                }
-                else if (proxy.Type == ProxyType.Chain)
-                {
-                    HttpProxyClient foundDeepProxy =
-                        FindHttpProxyInChain(proxy as ChainProxyClient);
+                        if (foundProxy != null && (!string.IsNullOrEmpty(foundProxy.Username) ||
+                                                   !string.IsNullOrEmpty(foundProxy.Password)))
+                        {
+                            return foundProxy;
+                        }
+                        break;
+                    case ProxyType.Chain:
+                        var foundDeepProxy =
+                            FindHttpProxyInChain(proxy as ChainProxyClient);
 
-                    if (foundDeepProxy != null &&
-                        (!string.IsNullOrEmpty(foundDeepProxy.Username) ||
-                        !string.IsNullOrEmpty(foundDeepProxy.Password)))
-                    {
-                        return foundDeepProxy;
-                    }
+                        if (foundDeepProxy != null &&
+                            (!string.IsNullOrEmpty(foundDeepProxy.Username) ||
+                             !string.IsNullOrEmpty(foundDeepProxy.Password)))
+                        {
+                            return foundDeepProxy;
+                        }
+                        break;
                 }
             }
 
             return foundProxy;
         }
 
-        private string ToHeadersString(Dictionary<string, string> headers)
+        private static string ToHeadersString(Dictionary<string, string> headers)
         {
             var headersBuilder = new StringBuilder();
 
@@ -2704,9 +2590,9 @@ namespace xNet.Net
         }
 
         // Проверяет, можно ли задавать этот заголовок.
-        private bool CheckHeader(string name)
+        private static bool CheckHeader(string name)
         {
-            return _closedHeaders.Contains(name, StringComparer.OrdinalIgnoreCase);
+            return ClosedHeaders.Contains(name, StringComparer.OrdinalIgnoreCase);
         }
 
         private void ClearRequestData()
