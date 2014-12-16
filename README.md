@@ -9,3 +9,5 @@ Classes for work with multithreading: a multithreaded bypassing the collection, 
 -Version .NET: 4.5
 
 Original repo: https://github.com/X-rus/xNet
+
+https://raw.githubusercontent.com/Education-Paleolithic/xNet/master/Dependencies%20Graph.png
