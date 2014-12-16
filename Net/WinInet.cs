@@ -102,14 +102,7 @@ namespace xNet.Net
             {
                 try
                 {
-                    if (value != null)
-                    {
-                        SetIEProxy(value.ToString());
-                    }
-                    else
-                    {
-                        SetIEProxy(string.Empty);
-                    }
+                    SetIEProxy(value?.ToString() ?? string.Empty);
                 }
                 catch (SecurityException) { }
                 catch (ObjectDisposedException) { }
@@ -132,18 +125,15 @@ namespace xNet.Net
         /// <exception cref="System.IO.IOException">Раздел <see cref="Microsoft.Win32.RegistryKey"/>, содержащий заданное значение, был помечен для удаления.</exception>
         public static bool GetIeProxyEnable()
         {
-            using (RegistryKey regKey = Registry.CurrentUser.OpenSubKey(PathToInternetOptions))
+            using (var regKey = Registry.CurrentUser.OpenSubKey(PathToInternetOptions))
             {
-                object value = regKey.GetValue("ProxyEnable");
+                var value = regKey?.GetValue("ProxyEnable");
 
                 if (value == null)
                 {
                     return false;
                 }
-                else
-                {
-                    return ((int)value == 0) ? false : true;
-                }
+                return ((int)value != 0);
             }
         }
 
@@ -156,9 +146,9 @@ namespace xNet.Net
         /// <exception cref="System.UnauthorizedAccessException">Запись в объект <see cref="Microsoft.Win32.RegistryKey"/> невозможна, например, он не может быть открыт как раздел, доступный для записи, или у пользователя нет необходимых прав доступа.</exception>
         public static void SetIeProxyEnable(bool enabled)
         {
-            using (RegistryKey regKey = Registry.CurrentUser.CreateSubKey(PathToInternetOptions))
+            using (var regKey = Registry.CurrentUser.CreateSubKey(PathToInternetOptions))
             {
-                regKey.SetValue("ProxyEnable", (enabled) ? 1 : 0);
+                regKey?.SetValue("ProxyEnable", (enabled) ? 1 : 0);
             }
         }
 
@@ -172,9 +162,9 @@ namespace xNet.Net
         /// <exception cref="System.IO.IOException">Раздел <see cref="Microsoft.Win32.RegistryKey"/>, содержащий заданное значение, был помечен для удаления.</exception>
         public static string GetIeProxy()
         {
-            using (RegistryKey regKey = Registry.CurrentUser.OpenSubKey(PathToInternetOptions))
+            using (var regKey = Registry.CurrentUser.OpenSubKey(PathToInternetOptions))
             {
-                return (regKey.GetValue("ProxyServer") as string) ?? string.Empty;
+                return (regKey?.GetValue("ProxyServer") as string) ?? string.Empty;
             }
         }
 
@@ -222,9 +212,9 @@ namespace xNet.Net
         /// <exception cref="System.UnauthorizedAccessException">Запись в объект <see cref="Microsoft.Win32.RegistryKey"/> невозможна, например, он не может быть открыт как раздел, доступный для записи, или у пользователя нет необходимых прав доступа.</exception>
         public static void SetIEProxy(string hostAndPort)
         {
-            using (RegistryKey regKey = Registry.CurrentUser.CreateSubKey(PathToInternetOptions))
+            using (var regKey = Registry.CurrentUser.CreateSubKey(PathToInternetOptions))
             {
-                regKey.SetValue("ProxyServer", hostAndPort ?? string.Empty);
+                regKey?.SetValue("ProxyServer", hostAndPort ?? string.Empty);
             }
         }
 

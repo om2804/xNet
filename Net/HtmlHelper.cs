@@ -11,7 +11,7 @@ namespace xNet.Net
     {
         #region _htmlMnemonics
 
-        private static readonly Dictionary<string, string> _htmlMnemonics = new Dictionary<string, string>()
+        private static readonly Dictionary<string, string> HtmlMnemonics = new Dictionary<string, string>()
         {
             { "apos", "'" },
             { "quot", "\"" },
@@ -40,20 +40,20 @@ namespace xNet.Net
 
             var regex = new Regex(@"(\&(?<text>\w{1,4})\;)|(\&#(?<code>\w{1,4})\;)", RegexOptions.Compiled);
 
-            string result = regex.Replace(str, match =>
+            var result = regex.Replace(str, match =>
             {
                 if (match.Groups["text"].Success)
                 {
                     string value;
 
-                    if (_htmlMnemonics.TryGetValue(match.Groups["text"].Value, out value))
+                    if (HtmlMnemonics.TryGetValue(match.Groups["text"].Value, out value))
                     {
                         return value;
                     }
                 }
                 else if (match.Groups["code"].Success)
                 {
-                    int code = int.Parse(match.Groups["code"].Value);
+                    var code = int.Parse(match.Groups["code"].Value);
                     return ((char)code).ToString();
                 }
 
@@ -78,9 +78,9 @@ namespace xNet.Net
 
             var regex = new Regex(@"\\[uU](?<text>[0-9A-F]{4})", RegexOptions.Compiled);
 
-            string result = regex.Replace(str, match =>
+            var result = regex.Replace(str, match =>
             {
-                int code = int.Parse(match.Groups["code"].Value, NumberStyles.HexNumber);
+                var code = int.Parse(match.Groups["code"].Value, NumberStyles.HexNumber);
 
                 return ((char)code).ToString();
             });

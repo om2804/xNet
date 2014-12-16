@@ -7,7 +7,7 @@ namespace xNet.Net
     /// <summary>
     /// Исключение, которое выбрасывается, в случае возникновения ошибки при работе с сетью.
     /// </summary>
-    public class NetException : Exception, ISerializable
+    public class NetException : Exception
     {
         #region Конструкторы (открытые)
 
